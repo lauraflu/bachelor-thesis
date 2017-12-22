@@ -1,0 +1,88 @@
+\begin{table}
+\parbox{.5\textwidth}{
+\centering
+\resizebox{0.5\textwidth}{!}{
+\begin{tabular}
+{||c  c  c ||}
+
+\hline
+ Overhead  & Command & Symbol \\ [0.5ex] 
+\hline\hline
+
+\hline
+43,51\%
+&
+MUSIC\_lin\_array
+&
+cgemm\_
+\\
+
+\hline
+12,16\%
+&
+autocorrelate_cnx
+&
+prepareInData
+\\
+
+\hline
+2,94\%
+&
+autocorrelate\_cnx
+&
+\makecell{std::complex \\ <float>::imag}
+\\
+
+\hline
+\end{tabular}
+}
+\centering
+\caption{Profil de execuție pentru lanțul MUSIC folosind kernelul de
+autocorelație}
+\label{tab:prof-chain-autocorr-k}
+}
+%\hfill
+\parbox{.5\textwidth}{
+\centering
+\resizebox{0.5\textwidth}{!}{
+\begin{tabular}
+{||c  c  c ||}
+
+\hline
+ Overhead  & Command & Symbol \\ [0.5ex] 
+\hline\hline
+
+\hline
+42,08\%
+&
+autocorrelate
+&
+cgemm\_
+\\
+
+\hline
+3,69\%
+&
+autocorrelate
+&
+arma::eopcore[...]
+\\
+
+\hline
+3,40\%
+&
+multiply\_matrix
+&
+\makecell{\_\_mulsc3 \\
+\\}
+\\
+
+
+\hline
+\end{tabular}
+}
+\centering
+\caption{Profil de execuție pentru lanțul MUSIC ce folosește kernelul MUSIC}
+\label{tab:prof-chain-music-k}
+}
+\end{table}

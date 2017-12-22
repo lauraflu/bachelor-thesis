@@ -1,0 +1,85 @@
+%=============================================================================
+% Profiling table
+%=============================================================================
+\begin{table}[H]
+\begin{center}
+ \begin{tabular}{||c c c||} 
+ \hline
+ Overhead  & Command & Symbol \\ [0.5ex] 
+ \hline\hline
+ 12,73\% 
+ &
+ autocorrelate8
+ &
+ \makecell{cgemm\_}
+ \\ 
+ 
+ \hline
+ 11,50\%
+ &
+ MUSIC\_lin\_array
+ &
+ \makecell{cgemm\_}
+ \\
+ 
+ \hline
+ 7,93\%  
+ &
+ noise\_source\_c3
+ &
+ \makecell{\_\_ieee754\_log\_avx}
+ \\
+ 
+ \hline
+ 7,89\%  
+ &
+ noise\_source\_c4
+ &
+ \makecell{\_\_ieee754\_log\_avx}
+ \\
+ 
+ \hline
+ 6,98\%  
+ &
+ noise\_source\_c3
+ &
+ \makecell{gr::random::ran1}
+ \\
+ 
+ \hline
+ 6,42\%  
+ &
+ noise\_source\_c4
+ &
+ \makecell{gr::random::gasdev}
+ \\
+ 
+ \hline
+ 6,09\%  
+ &
+ noise\_source\_c4
+ &
+ \makecell{gr::random::ran1}
+ \\
+ 
+ \hline
+ 5,32\%  
+ &
+ noise\_source\_c3
+ &
+ \makecell{gr::random::gasdev}
+ \\
+ 
+ \hline
+ 5,32\%  
+ &
+ MUSIC\_lin\_array
+ &
+ \makecell{gr::doa::MUSIC\_lin\_array\_impl::work}
+ 
+ \\ [1ex] 
+ \hline
+\end{tabular}
+\end{center}
+\caption{Profiling Results After Corrections}\label{tab:prof-remove}
+\end{table}

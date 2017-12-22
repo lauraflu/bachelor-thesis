@@ -1,0 +1,45 @@
+%=============================================================================
+% Profiling table
+%=============================================================================
+\begin{table}[H]
+\begin{center}
+ \begin{tabular}{||c c c||} 
+ \hline
+ Overhead  & Command & Symbol \\ [0.5ex] 
+ \hline\hline
+ 15,19\% 
+ &
+ autocorrelate8
+ &
+ \makecell{cgemm\_}
+ \\ 
+ 
+ \hline
+ 10,73\%
+ &
+ MUSIC\_lin\_array
+ &
+ \makecell{cgemm\_}
+ \\
+ 
+ \hline
+ 5,73\%  
+ &
+ noise\_source\_c4
+ &
+ \makecell{\_\_logf\_finite}
+ \\
+ 
+ \hline
+ 5,62\%  
+ &
+ noise\_source\_c3
+ &
+ \makecell{\_\_logf\_finite}
+
+ \\ [1ex] 
+ \hline
+\end{tabular}
+\end{center}
+\caption{Profiling Results After Corrections on ARM Cortex A9}\label{tab:prof-zedboard}
+\end{table}

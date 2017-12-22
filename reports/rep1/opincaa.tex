@@ -1,0 +1,100 @@
+%============================================================================
+% ADD SUPPORT FOR OPINCAA IN GNU RADIO
+%============================================================================
+
+\section{Add support for OPINCAA in GNU Radio}
+\label{sec:opincaa}
+
+Since the ConnexArray is made to work with vectors, it does not make much sense
+to add only two numbers as before, so instead we have two input arrays whose
+elements are loaded into the PEs, then elements with the same index from the two
+arrays are added into the PEs and, finally, a reduction is performed over all
+the active PEs, so the result is basically the sum of all the elements in the
+input arrays.\\
+
+The following changes need to be made to the block:
+\begin{itemize}
+  \item I chose to keep a pointer to the \code{ConnexMachine} object as a
+          private member of the \code{add\_ii} block. Then, since we need only an
+          instance of it, we create it in the constructor of the class
+          \S\ref{ssec:ctor}, using the arguments that contain the paths to the FIFO queues.
+          
+  \item In the worker, we define a simple \code{add} kernel that initializes R1
+          and R2 with the contents of, respectively, the first and second vectors of
+          the local storage, then adds their contents and stores the result in R2.
+          Finally, a \code{reduce} operation is applied to all the R2 registers.
+
+  \item Before executing the kernel, we write the two input arrays to the first two
+          vectors of the local storage using the method
+          \code{writeDataToArray}, which takes as arguments, respectively, the
+          array to be written, its number of elements and the vector (the local
+          storage location) in which the elements are stored.
+          Finally, we run the kernel and assign the result of the reduction to the
+          first element of the output vector. The result represents the sum of
+          all the numbers in the arrays.
+\end{itemize}
+
+The full source code of this function can be found in section
+\S\ref{ssec:work-kernel}.\\
+
+There were several problems at compile time. Firstly, the
+\code{ConnexMachine.h} header needs to be added to the
+\textbf{add\_ii\_impl.h} file. Because this header uses certain features from
+C++11, support for this standard must be added, so the line
+
+\begin{lstlisting}
+SET(CMAKE_CXX_FLAGS "\${CMAKE_CXX_FLAGS} -std=c++0x")
+\end{lstlisting}
+
+needs to be written in the \textbf{CMakeLists.txt} file, in the \textbf{Compiler
+Specific Setup} section.\\
+
+Then, the \code{opincaa} library needs to be added to the
+\code{GR\_SWIG\_LIBRARIES} in \textbf{swig/CMakeLists.txt}, in order to be
+able to link the symbols related to it.\\
+
+Even with these changes, I was unable to use the Python unit testing, as even
+though the ConnexMachine was created and the kernel was succesfully executed,
+giving correct results, right before returning the \code{noutput\_items} in
+the \code{work} method, the thread caught an unrecognized exception. I suspect
+the problem comes from the way in which SWIG connects the C++ modules with the
+Python tests and this is an issue I will further investigate, as I would like
+to be able to use the unit testing framework with Python.\\
+
+Given this issue, I chose to create a C++ test to verify if I would encounter the
+same problem. I used a similar stucture of the testing code as I did in the
+Python test, as can be seen in the subsection \S\ref{ssec:test-cpp}. \\
+
+The next step was to create a Makefile to build the block, as well as the test
+( \S\ref{ssec:makefile-test-cpp} ). Also, in order to make the testing easier, I
+created a bash script to run the simulator and the test with the correct
+parameters. It is worthwhile mentioning that, currently, the OPINCAA project
+must be installed separately (and the simulator for the ConnexArray SIMD must
+be also built along) and the relative (or absolute) path to the project must
+be set before running the test. A better approach would be adding the OPINCAA
+project directly as a git submodule for the current module, in order to ensure
+that all the dependencies are satisfied and to eliminate the need to modify
+the path. \\
+
+By running \code{make} and then \code{./test\_simulator.sh} I get the following
+output:\\
+
+\begin{lstlisting}[language=bash]
+laoo@neverland ~/work/licenta/gr-opincaa $ ./test_simulator.sh 
+FIFO distributionFIFO succesfully opened!
+FIFO writeFIFO succesfully opened!
+FIFO reductionFIFO succesfully opened!
+FIFO readFIFO succesfully opened!
+Starting Core Thread...
+Starting IO Thread...
+/home/laoo/work/licenta/gr-opincaa/distributionFIFO
+/home/laoo/work/licenta/gr-opincaa/reductionFIFO
+/home/laoo/work/licenta/gr-opincaa/writeFIFO
+/home/laoo/work/licenta/gr-opincaa/readFIFO
+ConnexMachine created !
+Reduction = 105
+./test_simulator.sh: line 38: 13175 Killed
+\end{lstlisting}
+
+The sum of all the elements in the two input arrays is, indeed, 105, so the
+block is functioning correctly.

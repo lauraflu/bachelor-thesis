@@ -1,0 +1,20 @@
+%============================================================================
+% INTRODUCTION
+%============================================================================
+
+\section{Introduction}
+	This report describes the process of creating a GNU Radio out-of-tree  module
+	which interfaces with OPINCAA\cite{opincaa-paper}, the framework used to program
+	the ConnexArray SIMD\cite{connex-paper}. At the moment, the module works only
+	with the simulator, but support for the hardware will be added in the future. 
+	The report is organised as follows: 
+	\S\ref{sec:struct-oot} describes the general structure of an out-of-tree 
+	module and the main files that it contains, while in \S\ref{sec:steps-oot} lie
+	the steps needed to actually create the module which performs a simple
+	addition (without using OPINCAA) and testing it using Python.
+	Section \S\ref{sec:opincaa} presents the changes needed in order to
+	create an OPINCAA kernel with a similar functionality inside GNU Radio, how to
+	write a C++ test for it and running it using the ConnexArray simulator.
+	Finally, in \S\ref{sec:conclusion} I present some conclusions and future work
+	plans and in \S\ref{sec:code-snip} can be found the code snippets to
+	support the explanations throughout the report.

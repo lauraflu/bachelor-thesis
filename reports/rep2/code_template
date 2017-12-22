@@ -1,0 +1,257 @@
+%============================================================================
+% CODE SNIPPETS
+%============================================================================
+
+\section{Code snippets}
+\label{sec:code-snip}
+
+	\begin{minipage}{\linewidth}
+	\subsection{Work Method: add\_ii\_impl.cc}
+	\label{ssec:simple-worker}
+		\lstset{
+				language=C++,
+				directivestyle={\color{black}},
+				emph={int,char,double,float,unsigned},
+				emphstyle={\color{RoyalBlue}}
+			}		
+		\begin{lstlisting}
+int                                                                         
+add_ii_impl::work(int noutput_items,                                       
+    gr_vector_const_void_star &input_items,                                 
+    gr_vector_void_star &output_items)                                      
+{                                                                           
+  const int *in0 = 
+		reinterpret_cast<const int *>(input_items[0]);           
+  const int *in1 = 
+		reinterpret_cast<const int *>(input_items[1]);           
+  int *out = reinterpret_cast<int *>(output_items[0]);                      
+                                                                            
+  for(size_t i = 0; i < noutput_items; i++) {                               
+    out[i] = in0[i] + in1[i];                                               
+  }                                                                         
+                                                                            
+  return noutput_items;                                                     
+} 
+		\end{lstlisting}
+	\end{minipage}
+	
+	\begin{minipage}{\linewidth}
+	\subsection{Python test: qa\_add\_ii.py}
+	\label{ssec:python-test}
+
+		\begin{lstlisting}[language=Python]
+def test_001_t (self):                                                      
+	src1_data = (-1, 0, 2, 4, 100)                                          
+	src2_data = (1, 20, -5, 100, 4)                                         
+	exp_result = (0, 20, -3, 104, 104)                                      
+																			
+	src1 = blocks.vector_source_i(src1_data)                                
+	src2 = blocks.vector_source_i(src2_data)                                
+																			
+	adder = opincaa.add_ii()                                               
+																			
+	dst = blocks.vector_sink_i()                                            
+																			
+	# connect the adder with its multiple inputs                            
+	self.tb.connect(src1, (adder, 0))                                       
+	self.tb.connect(src2, (adder, 1))                                       
+																			
+	# connect the adder to the sink                                         
+	self.tb.connect(adder, dst)                                             
+																			
+	# run the graph                                                         
+	self.tb.run ()                                                          
+																			
+	# check data                                                            
+	result_data = dst.data()                                                
+	self.assertTupleEqual(result_data, exp_result)
+		\end{lstlisting}
+	\end{minipage}
+
+	
+	\begin{minipage}{\linewidth}
+	\subsection{Constructor of the class: add\_ii\_impl.cc}
+	\label{ssec:ctor}
+		\begin{lstlisting}
+add_ii_impl::add_ii_impl(                                                   
+    std::string distributionFIFO,                                           
+    std::string reductionFIFO,                                              
+    std::string writeFIFO,                                                  
+    std::string readFIFO                                                    
+    )                                                                       
+  : gr::sync_block("add_ii",                                                
+          gr::io_signature::make(2, 2, sizeof(int)),                        
+          gr::io_signature::make(1, 1, sizeof(int)))                        
+{                                                                           
+  try {                                                                     
+    connex = new ConnexMachine(distributionFIFO,                    
+                               reductionFIFO,                       
+                               writeFIFO,                           
+                               readFIFO);                           
+  } catch (std::string err) {                                               
+    std::cout << err << std::endl;                                          
+  }                                                                         
+}
+		\end{lstlisting}
+		\end{minipage}
+
+	\begin{minipage}{\linewidth}
+	\subsection{Work method using an OPINCAA kernel: add\_ii\_impl.cc}
+	\label{ssec:work-kernel}
+		\begin{lstlisting}
+int                                                                         
+add_ii_impl::work(int noutput_items,                                        
+    gr_vector_const_void_star &input_items,                                 
+    gr_vector_void_star &output_items)                                      
+{                                                                           
+	if (!connex) {
+		// the ConnexMachine was not successfully created
+		return noutput_items;
+	}
+	
+	const int *in0 = reinterpret_cast<const int *>(input_items[0]);           
+  const int *in1 = reinterpret_cast<const int *>(input_items[1]);           
+  int *out = reinterpret_cast<int *>(output_items[0]);                      
+                                                                            
+  BEGIN_KERNEL("add");                                                      
+    EXECUTE_IN_ALL(                                                         
+                    R1 = LS[0];                                             
+                    R2 = LS[1];                                             
+                    R2 = R1 + R2;                                           
+                    REDUCE(R2);                                             
+                  )                                                         
+  END_KERNEL("add");                                                        
+                                                                            
+  connex->writeDataToArray(in0, noutput_items, 0);                          
+  connex->writeDataToArray(in1, noutput_items, 1);                          
+                                                                            
+  connex->executeKernel("add");                                             
+  out[0] = connex->readReduction();                                         
+                                                                            
+  return noutput_items;                                                     
+}
+		\end{lstlisting}
+		\end{minipage}
+
+	\begin{minipage}{\linewidth}
+	\subsection{C++ test}
+	\label{ssec:test-cpp}
+		\begin{lstlisting}
+#include <gnuradio/top_block.h>                                                 
+#include <gnuradio/blocks/vector_source_i.h>                                    
+#include <gnuradio/blocks/vector_sink_i.h>                                      
+#include "include/opincaa/add_ii.h"                                             
+                                                                                
+using namespace gr;                                                             
+                                                                                
+int main(int argc, char **argv)                                                 
+{                                                                               
+  top_block_sptr tb = make_top_block("add_connex");                             
+  
+	// Define the input data
+  const std::vector<int> src1_data = {1, 2, 3, 4, 5, 6, 7};                     
+  const std::vector<int> src2_data = {8, 9, 10, 11, 12, 13, 14};                
+  
+	// Create two source blocks that pass the input data
+  blocks::vector_source_i::sptr src1 = 
+			blocks::vector_source_i::make(src1_data);
+  blocks::vector_source_i::sptr src2 = 
+			blocks::vector_source_i::make(src2_data);
+  
+	// Create an add_ii block - takes as arguments the FIFO paths
+  opincaa::add_ii::sptr adder = opincaa::add_ii::make(                          
+      argv[1], argv[2], argv[3], argv[4]                                        
+      );                                                                        
+      
+	// Create a sink block
+  blocks::vector_sink_i::sptr dst = blocks::vector_sink_i::make();              
+                        
+	// Connect the blocks
+	// Connect the output of src1 to the adder's first input
+  tb->connect(src1, 0, adder, 0);     
+
+	// Connect the output of src2 to the adder's second input
+  tb->connect(src2, 0, adder, 1);                                         
+
+	// Connect the adder's output to the sink's input
+  tb->connect(adder, 0, dst, 0);                                                
+                                                   
+	// Run the flow graph
+  tb->run();                                                                    
+                       
+	// Check the data obtained
+  std::vector<int> dst_data = dst->data();                                      
+  std::cout << "Reduction = " << dst_data[0] << std::endl;                      
+                                                                                
+  return 0;                                                                     
+} 
+		\end{lstlisting}
+		\end{minipage}\\
+	
+	\begin{minipage}{\linewidth}
+	\subsection{Makefile}
+	\label{ssec:makefile-test-cpp}
+		\begin{lstlisting}[language=make]
+WD = $(shell pwd)                                                               
+CXXFLAGS = -g -std=c++11                                                        
+LDFLAGS = -L/usr/lib -L/usr/local/lib/ -Lbuild/lib/                             
+LDLIBS = -lgnuradio-runtime -lgnuradio-opincaa -lopincaa \
+	-lboost_system  -lgnuradio-blocks -lgnuradio-pmt
+                                                                                
+all: connex_adder                                                               
+                                                                                
+build/Makefile: CMakeLists.txt                                                  
+  mkdir -p build && cd build && cmake ..                                        
+                                                                                
+build/lib/gnuradio-opincaa.so: build/Makefile                                   
+  cd build && make                                                              
+                                                                                
+connex_adder: test_add_block.cc build/lib/gnuradio-opincaa.so                   
+  g++ $< $(LDFLAGS) $(CXXFLAGS) $(LDLIBS) -o $@                                 
+                                                                                
+clean:                                                                          
+  rm connex_adder                                                               
+                                                                                
+distclean:                                                                      
+  git clean -xfd   
+		\end{lstlisting}
+		\end{minipage}
+
+	
+	\begin{minipage}{\linewidth}
+	\subsection{Testing script}
+	\label{ssec:script-test-cpp}
+		\begin{lstlisting}[language=bash]
+#!/bin/bash                                                                     
+                                                                                
+# Quick workaround: be sure to set the correct path to OPINCAA                  
+OPINCAA_PATH=../../opincaa                                                      
+                                                                                
+SIM_PATH=$OPINCAA_PATH/simulator                                                
+GR_OPINCAA_LIB=build/lib/                                                       
+CONNEX16_LIB=$OPINCAA_PATH/libs/connex16-hm-generic                             
+                                                                                
+FIFO_ROOT_PATH=/home/laoo/work/licenta/gr-opincaa                               
+DISTRIBUTION_FIFO=$FIFO_ROOT_PATH/distributionFIFO                              
+REDUCTION_FIFO=$FIFO_ROOT_PATH/reductionFIFO                                    
+WRITE_FIFO=$FIFO_ROOT_PATH/writeFIFO                                            
+READ_FIFO=$FIFO_ROOT_PATH/readFIFO                                              
+                                                                                
+#start the simulator                                                            
+./$SIM_PATH/build/simulator &                                                   
+                                                                                
+#run the test                                                                   
+sleep 3                                                                         
+LD_LIBRARY_PATH=$CONNEX16_LIB:$GR_OPINCAA_LIB                                   
+export LD_LIBRARY_PATH                                                          
+                                                                                
+# run C++ test                                                                  
+./connex_adder $DISTRIBUTION_FIFO $REDUCTION_FIFO $WRITE_FIFO 
+$READ_FIFO       
+                                                                               
+#kill simulator                                                                 
+killall -9 simulator  
+		\end{lstlisting}
+		\end{minipage}
+
+

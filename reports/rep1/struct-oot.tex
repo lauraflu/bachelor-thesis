@@ -1,0 +1,77 @@
+%============================================================================
+% STRUCTURE OF AN OOT MODULE
+%============================================================================
+
+\section{Structure of an out-of-tree module}
+\label{sec:struct-oot}
+
+A module should contain the following directories and files:
+\begin{itemize}
+  \item apps/
+	\item build/
+  \item cmake/
+  \item CMakeLists.txt
+  \item docs/
+  \item examples/
+  \item grc/
+  \item include/
+  \item lib/
+  \item python/
+  \item swig/
+\end{itemize}
+
+Although \textbf{gr\_modtool} takes care of this structure and creates most of
+the files for us, it is worthwhile mentioning some of the most important files,
+where they are found and some coding details about them\cite{blocks},
+\cite{oot-modules}.
+
+\subsection{Coding structure}
+\subsubsection*{Public Header Files}
+\begin{itemize}
+  \item Defined in \textbf{include/foo}
+  \item Installed into \textbf{prefix/include/foo}
+\end{itemize}
+
+\subsubsection*{Private Implementation Header Files}
+\begin{itemize}
+  \item Defined in \textbf{lib/}
+  \item Are relevant only for the compilation, but not installed later
+  \item This is according to the pImpl idiom, where we hide the implementation details
+of an interface, in order to avoid recompilation of the modules using it in case
+it is changed\cite{pimpl}.
+\end{itemize}
+
+\subsubsection*{Implementation Source Files}
+\begin{itemize}
+  \item Located in \textbf{lib/}
+\end{itemize}
+
+\subsubsection*{SWIG Interface File}
+\begin{itemize}
+  \item A single file located in the directory \textbf{swig/}, where we include the
+  headers in the main interface file
+  \item SWIG (Simplified Wrapper and Interface Generator) is used, in this case, to
+connect code written in C++ with one written in Python, so modules written in
+C++ are still available in Python\cite{swig}.
+\end{itemize}
+
+\subsubsection*{Python Files}
+\begin{itemize}
+  \item Located in the \textbf{python/} directory
+  \item Contains unit tests (not installed) and parts of the Python module (installed)
+\end{itemize}
+
+\subsubsection*{XML Scripts}
+\begin{itemize}
+  \item Located in the \textbf{grc/} directory
+  \item Needed in order to make the out-of-tree module created available in the GUI
+	called GNU Radio Companion\cite{grc}.
+\end{itemize}
+
+\subsubsection*{CMakeLists}
+\begin{itemize}
+	\item There is one \textbf{CMakeLists.txt} in every subdirectory of the OOT
+		module.
+	\item Contain instructions about how to find the libraries needed by our
+		module.
+\end{itemize}

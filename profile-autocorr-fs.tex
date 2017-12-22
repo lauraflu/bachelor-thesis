@@ -1,0 +1,79 @@
+%=============================================================================
+% Profiling table
+%=============================================================================
+\begin{table}[H]
+\begin{center}
+ \begin{tabular*}{\textwidth}{||c @{\extracolsep{\fill}} c @{\extracolsep{\fill}} c @{\extracolsep{\fill}}||}
+% {||c c c||} 
+ \hline
+ Overhead  & Command & Symbol \\ [0.5ex] 
+ \hline\hline
+ 30,83\% 
+ &
+ autocorrelate5
+ &
+ \makecell{cgemm\_}
+ \\ 
+ 
+ \hline
+ 18,74\%
+ &
+ autocorrelate5
+ &
+ \makecell{arma::eop\_core<arma::eop\_conj>::apply<arma::Mat \\
+ <std::complex<float> >, arma::Mat<std::complex<float> > >}
+ \\
+ 
+ \hline
+ 12,45\%  
+ &
+ autocorrelate5
+ &
+ \makecell{arma::op_strans::apply_mat_noalias<std::complex<float>, \\
+ arma::Mat<std::complex<float> > >}
+ \\
+ 
+ \hline
+ 10,34\%  
+ &
+ autocorrelate5
+ &
+ \makecell{std::conj<float>}
+ \\
+ 
+ \hline
+ 3,78\%  
+ &
+ autocorrelate5
+ &
+ \makecell{std::complex<float>::complex}
+ \\
+ 
+ \hline
+ 3,20\%  
+ &
+ autocorrelate5
+ &
+ \makecell{memcpy}
+ \\
+ 
+ \hline
+ 2,61\%  
+ &
+ autocorrelate5
+ &
+ \makecell{std::complex<float>::imag[abi:cxx11]}
+ \\
+ 
+ \hline
+ 1,90\%  
+ &
+ autocorrelate5
+ &
+ \makecell{std::complex<float>::real[abi:cxx11]}
+ \\ [1ex] 
+ \hline
+\end{tabular*}
+\end{center}
+\caption{Profil pentru blocul de autocorelație în implementarea originală}\label{tab:prof-autocorr}
+\end{table}

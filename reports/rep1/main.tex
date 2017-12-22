@@ -1,0 +1,50 @@
+\documentclass[a4paper,11pt]{article}
+\usepackage{listings}
+\usepackage[dvipsnames]{xcolor}
+\usepackage{color}
+
+\definecolor{codegray}{gray}{0.9}
+\definecolor{mygray}{rgb}{0.4,0.4,0.4}
+\definecolor{mygreen}{rgb}{0,0.8,0.6}
+\definecolor{myorange}{rgb}{1.0,0.4,0}
+
+\newcommand{\code}[1]{\colorbox{codegray}{\texttt{#1}}}
+
+\lstset{ %
+			basicstyle=\footnotesize\sffamily\color{black},
+			commentstyle=\color{mygray},
+			frame=single,
+			numbers=left,
+			numbersep=5pt,
+			numberstyle=\tiny\color{mygray},
+			keywordstyle=\color{mygreen},
+			showspaces=false,
+			showstringspaces=false,
+			stringstyle=\color{myorange},
+			tabsize=2
+		}
+
+\begin{document}
+\title{GNU Radio Out-of-Tree Modules with OPINCAA}
+\author{Flueratoru Laura}
+\date{}
+\maketitle
+
+\input{intro}
+\input{struct-oot}
+\input{create-oot}
+\input{opincaa}
+\input{conclusion}
+\input{code-snip}
+
+\begin{thebibliography}{1}
+  \bibitem{opincaa-paper} http://www.imt.ro/romjist/Volum16/Number16\_4/pdf/06-LPetrica.pdf
+  \bibitem{connex-paper} is there any paper about it?
+  \bibitem{blocks} http://gnuradio.org/redmine/projects/gnuradio/wiki/BlocksCodingGuide
+  \bibitem{oot-modules} http://gnuradio.org/redmine/projects/gnuradio/wiki/OutOfTreeModules
+  \bibitem{pimpl} https://en.wikipedia.org/wiki/Opaque\_pointer
+  \bibitem{swig} http://www.swig.org/exec.html
+  \bibitem{grc} http://gnuradio.org/redmine/projects/gnuradio/wiki/GNURadioCompanion
+\end{thebibliography}
+
+\end{document}

@@ -1,0 +1,264 @@
+%============================================================================
+% CODE SNIPPETS
+%============================================================================
+
+\newpage
+\section{Code snippets}
+\label{sec:code-snips}
+
+	\subsection{The C++ Flow Graph Used for Profiling}
+	\label{ssec:code-profiling}
+		\lstset{
+		    language=C++,
+		    directivestyle={\color{black}},
+		    emph={int,char,double,float,unsigned},
+		    emphstyle={\color{RoyalBlue}}
+		}		
+		\begin{lstlisting}[
+		    caption={The C++ Flow Graph Used for Profiling},
+		    label={lst:cpp-fg}
+		]
+#include <gnuradio/top_block.h>
+#include <gnuradio/analog/sig_source_c.h>
+#include <gnuradio/blocks/multiply_matrix_cc.h>
+#include <gnuradio/blocks/null_sink.h>
+#include <gnuradio/blocks/vector_to_streams.h>
+#include <gnuradio/blocks/file_sink.h>
+#include <gnuradio/blocks/vector_sink_f.h>
+#include <gnuradio/blocks/vector_sink_c.h>
+#include <gnuradio/gr_complex.h>
+
+#include <doa/autocorrelate.h>
+#include <doa/MUSIC_lin_array.h>
+#include <doa/find_local_max.h>
+
+#include <cmath>
+#include <complex>
+#include <chrono>
+#include <thread>
+#include <boost/math/constants/constants.hpp>
+
+struct input_variables
+{
+    double sample_rate;
+    double tone_freq1;
+    double tone_freq2;
+    float norm_spacing;
+    int num_targets;
+    int num_array_elements;
+    int p_spectrum_length;
+    int snapshot_size;
+    int overlap_size;
+};
+
+
+int main(int argc, char **argv)
+{
+    using namespace std::complex_literals;
+
+    gr::top_block_sptr fg = gr::make_top_block("run_MUSIC");
+
+    const float pi = boost::math::constants::pi<float>();
+
+    /*=============================================
+     * Variables
+     *============================================*/
+    struct input_variables in_vars = {
+        320000, // sample_rate
+        10000,  // tone_freq1
+        20000,  // tone_freq2
+        0.4,    // norm_spacing
+        2,      // num_targets
+        4,      // num_array_elements
+        1024,   // p_spectrum_length
+        2048,   // snapshot_size
+        512     // overlap_size
+    };
+    int theta0_deg = 50;
+    int theta1_deg = 140;
+    float theta0 = pi * theta0_deg / 180;
+    float theta1 = pi * theta1_deg / 180;
+    
+    std::vector<gr_complex> amv0(in_vars.num_array_elements);
+    std::vector<gr_complex> amv1(in_vars.num_array_elements);
+    std::vector<std::vector<gr_complex>> array_manifold_matrix(
+        in_vars.num_array_elements,
+        std::vector<gr_complex>(in_vars.num_targets)
+    );
+    float ant_loc_val;
+    
+    if (in_vars.num_array_elements % 2 == 1) {
+        ant_loc_val = (float)in_vars.num_array_elements / 2;
+    } else {
+        ant_loc_val = (float)in_vars.num_array_elements/2 - 0.5;
+    }
+
+    // can't multiply by an integer (2) when we have -1if
+    float temp_norm_spacing = in_vars.norm_spacing * 2;
+    for (int i = 0; i < in_vars.num_array_elements; i++) {
+        amv0[i] = std::exp(-1if * temp_norm_spacing * pi * 
+			    ant_loc_val * cosf(theta0));
+        amv1[i] = std::exp(-1if * temp_norm_spacing * pi *
+			    ant_loc_val * cosf(theta1));
+        array_manifold_matrix[i][0] = amv0[i];
+        array_manifold_matrix[i][1] = amv1[i];
+
+        ant_loc_val--;
+    }
+    
+    /*=============================================
+     * Blocks
+     *============================================*/
+    
+    gr::analog::sig_source_c::sptr sig_src1 = 
+        gr::analog::sig_source_c::make(
+            in_vars.sample_rate,
+            gr::analog::GR_COS_WAVE, // waveform used
+            in_vars.tone_freq1,     // wave frequency
+            1,                      // amplitude
+            0                       // offset
+        );
+    
+    gr::analog::sig_source_c::sptr sig_src2 = 
+        gr::analog::sig_source_c::make(
+            in_vars.sample_rate,
+            gr::analog::GR_COS_WAVE, // waveform used
+            in_vars.tone_freq2,     // wave frequency
+            1,                      // amplitude
+            0                       // offset
+        );
+
+    gr::blocks::multiply_matrix_cc::sptr mult_by_matrix1 = 
+        gr::blocks::multiply_matrix_cc::make(
+            array_manifold_matrix,
+            gr::block::TPP_ALL_TO_ALL
+        );
+
+    gr::doa::autocorrelate::sptr autocorr1 = 
+        gr::doa::autocorrelate::make(
+            in_vars.num_array_elements,
+            in_vars.snapshot_size,
+            in_vars.overlap_size,
+            1 
+        );
+    
+    gr::doa::MUSIC_lin_array::sptr music_lin_array1 =
+        gr::doa::MUSIC_lin_array::make(
+            in_vars.norm_spacing,
+            in_vars.num_targets,
+            in_vars.num_array_elements,
+            in_vars.p_spectrum_length
+        );
+
+    gr::doa::find_local_max::sptr find_local_max1 = 
+        gr::doa::find_local_max::make(
+            in_vars.num_targets,
+            in_vars.p_spectrum_length,
+            0.0, // min value of index vector
+            180.0 // max value of index vector
+        );
+
+    // Null sink for locations
+    gr::blocks::null_sink::sptr null_sink1 = 
+        gr::blocks::null_sink::make(
+            sizeof(float) * in_vars.num_targets // item size
+        );
+
+#ifdef PROFILE_GR_DOA    
+    // Null sink for directions of arrival ---> for profiling
+    gr::blocks::null_sink::sptr null_sink2 = 
+        gr::blocks::null_sink::make(
+            sizeof(float) * in_vars.num_targets // item size
+        );
+#else
+    // Vector to streams + Vector sinks ---> for testing
+    gr::blocks::vector_to_streams::sptr v_to_s1 = 
+        gr::blocks::vector_to_streams::make(
+            sizeof(float),      // item size
+            in_vars.num_targets // number of streams
+        );
+    gr::blocks::vector_sink_f::sptr v_sink1 = 
+        gr::blocks::vector_sink_f::make();
+    gr::blocks::vector_sink_f::sptr v_sink2 = 
+        gr::blocks::vector_sink_f::make();
+#endif
+   
+    /*=============================================
+     * Connections
+     *============================================*/
+
+    fg->connect(sig_src1, 0, mult_by_matrix1, 0);
+    fg->connect(sig_src2, 0, mult_by_matrix1, 1);
+    fg->connect(mult_by_matrix1, 0, autocorr1, 0);
+    fg->connect(mult_by_matrix1, 1, autocorr1, 1);
+    fg->connect(mult_by_matrix1, 2, autocorr1, 2);
+    fg->connect(mult_by_matrix1, 3, autocorr1, 3);
+    fg->connect(autocorr1, 0, music_lin_array1, 0);
+    fg->connect(music_lin_array1, 0, find_local_max1, 0);
+    fg->connect(find_local_max1, 0, null_sink1, 0);
+   
+    
+#ifdef PROFILE_GR_DOA    
+    // Null sink ---> for profiling
+    fg->connect(find_local_max1, 1, null_sink2, 0);
+#else     
+    // Vector to streams + Vector sinks ---> for testing
+    fg->connect(find_local_max1, 1, v_to_s1, 0);
+    fg->connect(v_to_s1, 0, v_sink1, 0);
+    fg->connect(v_to_s1, 1, v_sink2, 0);
+#endif
+
+    /*=============================================
+     * Run the graph
+     *============================================*/
+    fg->start();
+
+    std::thread t([&fg]{
+        // std::cout << "Sleeping...\n";
+        std::this_thread::sleep_for(std::chrono::seconds(2));
+        fg->stop();
+        fg->wait();
+    });
+    t.join();
+
+#ifndef PROFILE_GR_DOA    
+    // For testing
+    std::vector<float> out_data1 = v_sink1->data();
+    std::vector<float> out_data2 = v_sink2->data();
+    std::cout << "angle1 = " << out_data1[0] << std::endl;
+    std::cout << "angle2 = " << out_data2[0] << std::endl;
+#endif
+
+    return 0;
+}
+		\end{lstlisting}
+	
+	\subsection{Makefile for the C++ Tester}
+	\label{ssec:makefile-profiling}
+		\begin{lstlisting}[
+		    language=make,
+		    caption={Makefile for the C++ Flow Graph},
+		    label={lst:cpp-fg-makefile}
+		]
+WD = $(shell pwd)
+GR_DOA_FP = /home/work/gr-doa
+CXXFLAGS = -I$(GR_DOA_FP)/include -O0 -std=c++14 -g
+LDFLAGS = -L$(GR_DOA_FP)/build/lib/
+LDLIBS = -lgnuradio-runtime -lboost_system -lgnuradio-blocks \
+	 -lgnuradio-pmt -lgnuradio-analog -lgnuradio-doa \
+	 -lpthread
+
+all: run_MUSIC
+profile: run_MUSIC_profile
+
+run_MUSIC: run_MUSIC.cc
+	g++ $< $(LDFLAGS) $(CXXFLAGS) $(LDLIBS) -o $@
+
+run_MUSIC_profile: run_MUSIC.cc
+	g++ $< $(LDFLAGS) $(CXXFLAGS) -DPROFILE_GR_DOA $(LDLIBS) -o $@
+
+clean:
+	rm run_MUSIC run_MUSIC_profile
+	\end{lstlisting}
+
+

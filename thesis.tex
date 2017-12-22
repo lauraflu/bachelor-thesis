@@ -1,0 +1,70 @@
+\documentclass{thesis.cs.pub.ro}
+\makeindex
+\begin{document}
+\addtocontents{toc}{\protect\thispagestyle{empty}}
+\addtocontents{lof}{\protect\thispagestyle{empty}}
+\addtocontents{lot}{\protect\thispagestyle{empty}}
+%\addtocontents{pn}{\protect\thispagestyle{empty}}
+
+\input{src/global}
+
+\begin{frontmatter} % roman numbering
+
+%\maketitle
+\input{template/titlepage.ro}
+
+
+% \begin{acknowledgements}
+% \input{src/base/acknowledgements}
+% \end{acknowledgements}
+
+% \begin{abstract}
+% \input{src/base/abstract}
+% \end{abstract}
+
+% \input{src/base/declaratie}
+
+% % anexa
+% \newpage\null\thispagestyle{empty}\newpage
+% \includepdf{assets/anexa-semnata}
+% 
+% % declaratie
+% \newpage\null\thispagestyle{empty}\newpage
+% \includepdf{assets/declaratie}
+% \pagestyle{empty}
+
+% toc
+\input{template/contents.pages}
+
+% abbrev
+{\clearpage
+\pagestyle{empty}
+\renewcommand\thepage{}
+\printnomenclature
+\clearpage}
+
+%\pagestyle{empty}
+%%\printabbrev
+%\printnomenclature
+%\newpage
+\end{frontmatter} % end roman numbering
+
+% 1.5 linespacing for the contents
+% \onehalfspacing
+
+\clearpage
+\pagestyle{fancy}
+\input{src/main}
+
+\input{src/base/contributions}
+
+\appendix
+\renewcommand*{\thechapter}{\arabic{chapter}}
+\input{src/appendix/index}
+
+\bibliography{src/main}
+\bibliographystyle{unsrt}
+
+\printindex
+
+\end{document}

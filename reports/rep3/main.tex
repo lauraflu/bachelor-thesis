@@ -1,0 +1,150 @@
+\documentclass[12pt, a4paper, oneside, romanian]{article}
+\usepackage{listings}
+\usepackage[dvipsnames]{xcolor}
+\usepackage{color}
+\usepackage[utf8x]{inputenc}
+
+% -----------------------------------------------------------------
+% Pretty formatting for 2nd, 3rd etc.
+\usepackage{nth}
+
+% -----------------------------------------------------------------
+% Math package
+\usepackage{amsmath}
+
+% -----------------------------------------------------------------
+% Bold in math mode
+\usepackage{bm}
+
+% -----------------------------------------------------------------
+% Use images
+\usepackage{graphicx}
+\graphicspath{ {images/} }
+\usepackage{float}
+
+% -----------------------------------------------------------------
+% Settings for pretty code
+\definecolor{codegray}{gray}{0.9}
+\definecolor{mygray}{rgb}{0.4,0.4,0.4}
+\definecolor{mygreen}{rgb}{0,0.8,0.6}
+\definecolor{myorange}{rgb}{1.0,0.4,0}
+
+% -----------------------------------------------------------------
+% Settings for tables
+\usepackage{array}
+\usepackage{tabu}
+\usepackage{makecell}
+
+% -----------------------------------------------------------------
+% For angular brackets 
+\usepackage[T1]{fontenc} 
+
+% -----------------------------------------------------------------
+% For strikethrough text
+\usepackage[normalem]{ulem}
+
+% -----------------------------------------------------------------
+%          **** PAGE LAYOUT ****
+% We need 1" (~72pt) margins except on the binding edge, where it is 1 1/2".
+% They are a bit larger to handle lines with overfull boxes.
+% 
+\oddsidemargin -5mm 
+\evensidemargin -5mm  %%% was 40 and 25 -dks
+
+\marginparwidth 40bp 
+\marginparsep 10bp 
+\topmargin -20mm 
+\leftmargin 0mm 
+\rightmargin 0mm 
+\textwidth 170mm
+\textheight 257mm
+
+%\topmargin -47bp        % Default margin is  73 points-- make 1/2 that
+                        % plus a bit more to get page 1/2 inch down.
+\headheight 10mm        % Height of box containing running head.
+\headsep 5mm           % Distance between foot of head and text.
+                        % headsep + headheight + topmargin ~ 72 pt
+%\textheight 648bp       % Height of text (including footnotes and  %%% was 620
+                        % figures, excluding running head and foot).
+%\textwidth 412bp        % Give 92pt right margin;72 + extra for overfull boxes.
+% disappeared from LaTeX\footheight 11bp        %    Height of box containing running foot.
+\footnotesep  
+\baselineskip
+\footskip 15mm          %    Distance from baseline of box containing foot 
+                        %    to baseline of last line of text.
+\parindent 3.5ex
+\parskip 1bp plus 1bp 
+\setcounter{tocdepth}{3} % Put subsubsections in toc (set to 2 in
+                         % report.sty). [lsc] 
+\skip\footins 15pt plus3pt minus3pt % Add space between text and
+                                    % footnotes.
+
+% -----------------------------------------------------------------
+% Code settings
+\newcommand{\code}[1]{\colorbox{codegray}{\texttt{#1}}}
+
+% -----------------------------------------------------------------
+% Verificare ortografie romana
+% aspell --lang=ro -t check ./main.tex
+
+% -----------------------------------------------------------------
+% Stuff from template ETTI
+\setcounter{secnumdepth}{3}
+\setcounter{tocdepth}{3}
+\usepackage{babel}
+\usepackage[
+    bookmarks,
+    bookmarksopen=true,
+    pdftitle={Licenta-Laura-Flueratoru},
+    linktocpage,
+    hidelinks]{hyperref}
+
+%\colorbox{codegray}{\lstinline[basicstyle=\ttfamily\color{white}]|<List>|} 
+
+\lstset{ %
+    basicstyle=\footnotesize\sffamily\color{black},
+    commentstyle=\color{mygray},
+    captionpos=b, 	% position of the caption to bottom
+    breaklines=true,	% sets automatic line breaking
+    frame=single, 	% adds a frame around the text
+    numbers=left,	% where to put line numbers
+    numbersep=5pt,
+    numberstyle=\tiny\color{mygray},
+    keywordstyle=\color{mygreen},
+    showspaces=false,
+    showstringspaces=false,
+    stringstyle=\color{myorange},
+    tabsize=2
+}
+
+\begin{document}
+\title{Report 3 - Acceleration}
+\author{Fluerătoru Laura}
+\date{}
+\maketitle
+
+\section{Introduction}
+
+This report outlines the steps undertaken to accelerate several parts of the
+MUSIC algorithm. Through profiling, there were found two hotspots in the chosen
+implementation, in computing the MUSIC spectrum and in the block that performs
+the autocorrelation of the signal. The former aspect is dealt with in Section
+\S\ref{sec:acc-music}, while the latter is to be discussed in Section
+\S\ref{sec:acc-autocorrelation}. Some conclusions and future work are found in
+Section \S\ref{sec:acc-conclusion} and the code can be found in Section
+\S\ref{sec:acc-code}.
+
+\input{acc-music}
+\input{acc-autocorrelation}
+\input{acc-conclusion}
+\input{acc-code}
+
+\begin{thebibliography}{1}
+    \bibitem{cite:ettus-doa} Phase Synchronization Capability of TwinRX
+    Daughterboards and DoA Estimation, Ettus Research
+    \bibitem{cite:armadillo} http://arma.sourceforge.net/ 
+    \bibitem{cite:blas} http://www.netlib.org/blas/
+    \bibitem{cite:octave} https://www.gnu.org/software/octave/
+\end{thebibliography}
+
+\end{document}

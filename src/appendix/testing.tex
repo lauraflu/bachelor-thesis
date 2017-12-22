@@ -1,0 +1,433 @@
+\chapter{Testarea lanțului de procesare MUSIC}
+
+\section{Declararea claselor necesare în testare}
+\label{sec:test-header}
+
+\lstset{
+    basicstyle=\fontsize{9}{9}\selectfont\ttfamily\color{black},
+    language=C++,
+    directivestyle={\color{black}},
+    emph={int,char,double,float,unsigned},
+    emphstyle={\color{mygray}},
+    numberstyle=\tiny\color{mygray},                                            
+    keywordstyle=\color{black}\bfseries,                                               
+    showspaces=false,                                                           
+    showstringspaces=false,                                                     
+    stringstyle=\color{mygray}  
+}
+\begin{lstlisting}[
+    caption={Declararea claselor necesare în testare},
+    label={lst:test-header}
+]
+#ifndef DOA_TEST_H_
+#define DOA_TEST_H_
+
+#include <array>
+#include <string>
+#include <vector>
+
+#include <gnuradio/analog/sig_source_waveform.h>
+#include <gnuradio/analog/noise_type.h>
+
+// Used to access the command line arguments from inside the test cases
+extern int my_argc;
+extern char **my_argv;
+
+template <int SIGNAL_SOURCES>
+class flowgraph_parameters
+{
+    template <typename T>
+    using array = std::array<T, SIGNAL_SOURCES>;
+
+public:
+    double sample_rate;
+    float norm_spacing;
+    int num_array_elements;
+    int p_spectrum_length;
+    int snapshot_size;
+    int overlap_size;
+    int nr_output_items;
+    array<double> freq;
+    array<int> theta_deg;
+    array<double> signal_amplitude;
+    array<double> noise_amplitude;
+    array<gr::analog::gr_waveform_t> waveform;
+    array<gr::analog::noise_type_t> noise_type;
+    std::string distributionFIFO;
+    std::string reductionFIFO;
+    std::string writeFIFO;
+    std::string readFIFO;
+
+    flowgraph_parameters() {}
+
+    flowgraph_parameters(flowgraph_parameters const &fg_param) :
+            sample_rate(fg_param.sample_rate),
+            norm_spacing(fg_param.norm_spacing),
+            num_array_elements(fg_param.num_array_elements),
+            p_spectrum_length(fg_param.p_spectrum_length),
+            snapshot_size(fg_param.snapshot_size),
+            overlap_size(fg_param.overlap_size),
+            nr_output_items(fg_param.nr_output_items),
+            freq(fg_param.freq),
+            theta_deg(fg_param.theta_deg),
+            signal_amplitude(fg_param.signal_amplitude),
+            noise_amplitude(fg_param.noise_amplitude),
+            waveform(fg_param.waveform),
+            noise_type(fg_param.noise_type),
+            distributionFIFO(fg_param.distributionFIFO),
+            reductionFIFO(fg_param.reductionFIFO),
+            writeFIFO(fg_param.writeFIFO),
+            readFIFO(fg_param.readFIFO)
+        {}
+
+    flowgraph_parameters &set_sample_rate(double sample_rate_) {
+        sample_rate = sample_rate_;
+        return *this;
+    }
+
+    flowgraph_parameters &set_norm_spacing(float norm_spacing_) {
+        norm_spacing = norm_spacing_;
+        return *this;
+    }
+
+    flowgraph_parameters &set_num_array_elements(int num_array_elements_) {
+        num_array_elements = num_array_elements_;
+        return *this;
+    }
+
+    flowgraph_parameters &set_p_spectrum_length(int p_spectrum_length_) {
+        p_spectrum_length = p_spectrum_length_;
+        return *this;
+    }
+
+    flowgraph_parameters &set_snapshot_size(int snapshot_size_) {
+        snapshot_size = snapshot_size_;
+        return *this;
+    }
+
+    flowgraph_parameters &set_overlap_size(int overlap_size_) {
+        overlap_size = overlap_size_;
+        return *this;
+    }
+
+    flowgraph_parameters &set_nr_output_items(int nr_output_items_) {
+        nr_output_items = nr_output_items_;
+        return *this;
+    }
+
+    flowgraph_parameters &set_freq(const array<double> &freq_) {
+        freq = freq_;
+        return *this;
+    }
+
+    flowgraph_parameters
+        &set_theta_deg(const array<int> &theta_deg_) {
+        theta_deg = theta_deg_;
+        return *this;
+    }
+
+    flowgraph_parameters &set_signal_amplitude(
+                        const array<double> &signal_amplitude_) {
+        signal_amplitude = signal_amplitude_;
+        return *this;
+    }
+
+    flowgraph_parameters &set_noise_amplitude(
+                        const array<double> &noise_amplitude_) {
+        noise_amplitude = noise_amplitude_;
+        return *this;
+    }
+
+    flowgraph_parameters &set_waveform(
+                        const array<gr::analog::gr_waveform_t> &waveform_) {
+        waveform = waveform_;
+        return *this;
+    }
+
+    flowgraph_parameters &set_noise_type(
+                        const array<gr::analog::noise_type_t> &noise_type_) {
+        noise_type = noise_type_;
+        return *this;
+    }
+
+    flowgraph_parameters
+        &set_distributionFIFO(std::string distributionFIFO_) {
+        distributionFIFO = distributionFIFO_;
+        return *this;
+    }
+
+    flowgraph_parameters
+        &set_reductionFIFO(std::string reductionFIFO_) {
+        reductionFIFO = reductionFIFO_;
+        return *this;
+    }
+
+    flowgraph_parameters
+        &set_writeFIFO(std::string writeFIFO_) {
+        writeFIFO = writeFIFO_;
+        return *this;
+    }
+
+    flowgraph_parameters
+        &set_readFIFO(std::string readFIFO_) {
+        readFIFO = readFIFO_;
+        return *this;
+    }
+};
+
+template <int SIGNAL_SOURCES>
+class doa_flowgraph
+{
+public:
+    flowgraph_parameters<SIGNAL_SOURCES> fg_param;
+
+    doa_flowgraph(const flowgraph_parameters<SIGNAL_SOURCES> &fg_param_) :
+        fg_param(fg_param_)
+        {}
+
+    std::vector<float> build_flowgraph();
+};
+#endif // DOA_TEST_H_
+\end{lstlisting}
+
+\section{Definirea metodei de construcție a unui lanț de procesare}
+\label{sec:test-code}
+
+\lstset{
+    language=C++,
+    directivestyle={\color{black}},
+    emph={int,char,double,float,unsigned},
+}
+\begin{lstlisting}[
+    caption={Definirea metodei de construcție a unui lanț de procesare},
+    label={lst:test-code}
+]
+#include "doa_test.h"
+
+#include <gnuradio/top_block.h>
+#include <gnuradio/analog/sig_source_c.h>
+#include <gnuradio/analog/noise_source_c.h>
+#include <gnuradio/blocks/add_cc.h>
+#include <gnuradio/blocks/throttle.h>
+#include <gnuradio/blocks/multiply_matrix_cc.h>
+#include <gnuradio/blocks/null_sink.h>
+#include <gnuradio/blocks/vector_to_streams.h>
+#include <gnuradio/blocks/head.h>
+#include <gnuradio/blocks/vector_sink_f.h>
+#include <gnuradio/gr_complex.h>
+
+#include <doa/autocorrelateConnexKernel.h>
+#include <doa/autocorrelate.h>
+#include <doa/MUSIC_lin_array.h>
+#include <doa/MUSIC_lin_array_cnx.h>
+#include <doa/find_local_max.h>
+
+#include <boost/math/constants/constants.hpp> // for type float PI
+
+#include <cmath>
+#include <complex>
+#include <chrono>
+#include <thread>
+
+using namespace std::complex_literals;
+
+template class doa_flowgraph<2>;
+
+template <int SIGNAL_SOURCES>
+std::vector<float> doa_flowgraph<SIGNAL_SOURCES>::build_flowgraph()
+{
+    gr::top_block_sptr tb = gr::make_top_block("run_MUSIC");
+
+    const float pi = boost::math::constants::pi<float>();
+    const int num_targets = 2;
+
+    float theta0 = pi * fg_param.theta_deg[0] / 180;
+    float theta1 = pi * fg_param.theta_deg[1] / 180;
+
+    std::vector<gr_complex> amv0(fg_param.num_array_elements);
+    std::vector<gr_complex> amv1(fg_param.num_array_elements);
+    std::vector<std::vector<gr_complex>> array_manifold_matrix(
+        fg_param.num_array_elements,
+        std::vector<gr_complex>(num_targets)
+    );
+
+    float ant_loc_val;
+
+    if (fg_param.num_array_elements % 2 == 1) {
+        ant_loc_val = (float)fg_param.num_array_elements / 2;
+    } else {
+        ant_loc_val = (float)fg_param.num_array_elements / 2 - 0.5;
+    }
+
+    // can't multiply by an integer (2) when we have -1if so it's a workaround
+    float temp_norm_spacing = fg_param.norm_spacing * 2;
+    for (int i = 0; i < fg_param.num_array_elements; i++) {
+        amv0[i] = std::exp(-1if * temp_norm_spacing * pi * ant_loc_val *
+                            cosf(theta0));
+        amv1[i] = std::exp(-1if * temp_norm_spacing * pi * ant_loc_val *
+                            cosf(theta1));
+        array_manifold_matrix[i][0] = amv0[i];
+        array_manifold_matrix[i][1] = amv1[i];
+
+        ant_loc_val--;
+    }
+
+    /*=============================================
+     * Blocks
+     *============================================*/
+
+    gr::analog::sig_source_c::sptr sig_src0 = gr::analog::sig_source_c::make(
+    fg_param.sample_rate,               // sample rate
+    fg_param.waveform[0],               // waveform used
+        fg_param.freq[0],               // wave frequency
+        fg_param.signal_amplitude[0],   // amplitude
+        0                               // offset
+    );
+
+    gr::analog::sig_source_c::sptr sig_src1 = gr::analog::sig_source_c::make(
+        fg_param.sample_rate,           // sample rate
+        fg_param.waveform[1],           // waveform used
+        fg_param.freq[1],               // wave frequency
+        fg_param.signal_amplitude[1],   // amplitude
+        0                               // offset
+    );
+
+    gr::analog::noise_source_c::sptr n_src0 =
+    gr::analog::noise_source_c::make(
+        fg_param.noise_type[0],         // type of noise
+        fg_param.noise_amplitude[0]     // amplitude of the noise
+    );
+
+    gr::analog::noise_source_c::sptr n_src1 =
+    gr::analog::noise_source_c::make(
+        fg_param.noise_type[1],         // type of noise
+        fg_param.noise_amplitude[1]     // amplitude of the noise
+    );
+
+    gr::blocks::throttle::sptr thr0 = gr::blocks::throttle::make(
+        sizeof(gr_complex),             // item size
+        fg_param.sample_rate            // sample rate
+    );
+
+    gr::blocks::add_cc::sptr add0 = gr::blocks::add_cc::make();
+
+    gr::blocks::add_cc::sptr add1 = gr::blocks::add_cc::make();
+
+    gr::blocks::multiply_matrix_cc::sptr mult_by_matrix0 =
+        gr::blocks::multiply_matrix_cc::make(
+            array_manifold_matrix,
+            gr::block::TPP_ALL_TO_ALL
+        );
+
+    gr::doa::autocorrelate::sptr autocorr0 =
+      gr::doa::autocorrelate::make(
+            fg_param.num_array_elements,
+            fg_param.snapshot_size,
+            fg_param.overlap_size,
+            1
+        );
+
+    gr::doa::MUSIC_lin_array::sptr music_lin_array0 =
+        gr::doa::MUSIC_lin_array::make(
+            fg_param.norm_spacing,
+            num_targets,
+            fg_param.num_array_elements,
+            fg_param.p_spectrum_length
+        );
+
+    gr::doa::find_local_max::sptr find_local_max0 =
+        gr::doa::find_local_max::make(
+            num_targets,        // maximum number of local maximums
+            fg_param.p_spectrum_length,
+            0.0,                // min value of index vector
+            180.0               // max value of index vector
+        );
+
+    // Null sink for locations
+    gr::blocks::null_sink::sptr null_sink0 =
+        gr::blocks::null_sink::make(
+            sizeof(float) * num_targets // item size
+        );
+
+    gr::blocks::vector_to_streams::sptr v_to_s0 =
+        gr::blocks::vector_to_streams::make(
+            sizeof(float),              // item size
+            num_targets                 // number of streams
+        );
+
+    // Limits the number of output items
+    gr::blocks::head::sptr head0 = gr::blocks::head::make(
+        sizeof(float),                  // size of stream item
+        fg_param.nr_output_items        // number of output items
+    );
+    gr::blocks::head::sptr head1 = gr::blocks::head::make(
+        sizeof(float),                  // size of stream item
+        fg_param.nr_output_items        // number of output items
+    );
+
+    gr::blocks::vector_sink_f::sptr v_sink0 = gr::blocks::vector_sink_f::make();
+    gr::blocks::vector_sink_f::sptr v_sink1 = gr::blocks::vector_sink_f::make();
+
+    /*=============================================
+     * Connections
+     *============================================*/
+
+    tb->connect(sig_src0, 0, add0, 0);
+    tb->connect(sig_src1, 0, add1, 0);
+
+    tb->connect(n_src0, 0, add0, 1);
+    tb->connect(n_src1, 0, thr0, 0);
+    tb->connect(thr0, 0, add1, 1);
+
+    tb->connect(add0, 0, mult_by_matrix0, 0);
+    tb->connect(add1, 0, mult_by_matrix0, 1);
+
+    for (int i = 0; i < fg_param.num_array_elements; i++) {
+      tb->connect(mult_by_matrix0, i, autocorr0, i);
+    }
+
+    tb->connect(autocorr0, 0, music_lin_array0, 0);
+    tb->connect(music_lin_array0, 0, find_local_max0, 0);
+    tb->connect(find_local_max0, 0, null_sink0, 0);
+
+    tb->connect(find_local_max0, 1, v_to_s0, 0);
+    tb->connect(v_to_s0, 0, head0, 0);
+    tb->connect(v_to_s0, 1, head1, 0);
+
+    tb->connect(head0, 0, v_sink0, 0);
+    tb->connect(head1, 0, v_sink1, 0);
+
+    /*=============================================
+     * Run the graph
+     *============================================*/
+    tb->start();
+
+    std::thread t([&tb]{
+        // Let run for 5 seconds
+        std::this_thread::sleep_for(std::chrono::seconds(5));
+        tb->stop();
+        tb->wait();
+    });
+    t.join();
+
+    std::vector<float> out_data0 = v_sink0->data();
+    std::vector<float> out_data1 = v_sink1->data();
+
+    if ((out_data0.size() > 0) && (out_data1.size() > 0))
+    {
+        size_t last_idx0 = out_data0.size() - 1;
+        size_t last_idx1 = out_data1.size() - 1;
+
+        std::cout << "Processed samples: " << out_data0.size()  << std::endl;
+
+        std::vector<float> out_data;
+        out_data.push_back(out_data0[last_idx0]);
+        out_data.push_back(out_data1[last_idx1]);
+        return out_data;
+    } else {
+        return {-1, -1};
+    }
+}
+\end{lstlisting}
+
+

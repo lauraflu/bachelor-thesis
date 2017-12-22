@@ -1,0 +1,70 @@
+\section{Accelerating the computation of the autocorrelation}
+\label{sec:acc-autocorrelation}
+
+The Autocorrelation block has been described in Report 2, Section 4.3. The key
+concept is that the autocorrelation is estimated through a sample correlation of
+the signals that arrive at the N antennas in the array, performed over a
+snapshot period of K samples, after which a Forward-Backward Averaging is
+computed, which helps the accuracy of the estimation. \\
+
+Therefore, the first step is computing the sample correlation matrix Cx from the
+matrix formed by the K samples from the N signals arriving at the antennas.
+\begin{equation}
+C_x = \frac{1}{K}\bm{X_K}\bm{X_K}^H.
+\end{equation} \\
+
+We observe that $\bm{C}_X$ is a Hermitian matrix, so $c_{ij} =
+\overline{c_{ji}}$, where $c_{ij}$ is an element of the matrix and  $i =
+\overline{0, N-1}$, $j = \overline{0, N-1}$. This means that it will suffice to
+calculate only the elements above and including the main diagonal.
+
+% TODO tell about the FB Av
+
+\subsection{Autocorrelation kernel on the ConnexArray SIMD}
+Computing the autocorrelation is reduced to a matrix multiplication which can be
+offloaded to the ConnexArray. Because we are dealing with large matrices, it is
+preferable to not perform the whole matrix multiplication in a single
+ConnexArray job, but instead calculate an element of $\bm{C}_X$ at a time. \\
+
+\begin{equation}
+    \bm{X}_N
+    \overset{\Delta}{=}
+    \begin{bmatrix}
+        x_{0,0}   &   x_{0,1}   &   \hdots   &   x_{0,K-1} \\
+        x_{1,0}   &   x_{1,1}   &   \hdots   &   x_{1,K-1} \\
+        \vdots    &   \vdots    &   \ddots   &   \vdots    \\
+        x_{N-1,0} &   x_{N-1,1} &   \hdots   &   x_{N-1,K-1}
+    \end{bmatrix}
+\end{equation}
+
+\begin{equation}
+    \bm{C}_X
+    = \bm{X}_N \bm{X}_N^H = 
+    \begin{bmatrix}
+        \displaystyle{\sum_{n=\overline{0, K-1}} x_{0,n}x_{n,0}^*} & 
+        \displaystyle{\sum_{n=\overline{0, K-1}} x_{0,n}x_{n,1}^*} & 
+        \hdots &
+        \displaystyle{\sum_{n=\overline{0, K-1}} x_{0,n}x_{n,N-1}^*} \\
+        \displaystyle{\sum_{n=\overline{0, K-1}} x_{1,n}x_{n,0}^*} & 
+        \displaystyle{\sum_{n=\overline{0, K-1}} x_{1,n}x_{n,1}^*} & 
+        \hdots &
+        \displaystyle{\sum_{n=\overline{0, K-1}} x_{1,n}x_{n,N-1}^*} \\
+        \vdots & \vdots & \ddots & \vdots \\
+        \displaystyle{\sum_{n=\overline{0, K-1}} x_{N-1,n}x_{n,0}^*} & 
+        \displaystyle{\sum_{n=\overline{0, K-1}} x_{N-1,n}x_{n,1}^*} & 
+        \hdots &
+        \displaystyle{\sum_{n=\overline{0, K-1}} x_{N-1,n}x_{n,N-1}^*}
+    \end{bmatrix}
+\end{equation}
+
+\begin{equation}
+x_{m,n} = a_{m,n} + jb_{m,n}, \quad m = \overline{0, M-1}, n = \overline{0, M-1}
+\end{equation}
+
+So an element $c_{m, n}$ of $\bm{C}_X$ is
+\begin{equation}
+c_{m, n} = \sum_{k=\overline{0, K-1}} (a_{m,k}a_{k,n} + b_{m,k}b_{k,n}) + 
+          j\sum_{k=\overline{0, K-1}} (-a_{m,k}b_{k,n} + b_{m,k}a_{k,n})
+\end{equation}
+
+

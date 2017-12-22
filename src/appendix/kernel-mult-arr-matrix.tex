@@ -1,0 +1,373 @@
+\chapter{Kerneluri ConnexArray}
+
+\section{Kernel pentru înmulțirea a doi vectori}
+\label{sec:kernel-mult-arr}
+\lstset{
+    basicstyle=\fontsize{9}{9}\selectfont\ttfamily\color{black},
+    language=C++,
+    directivestyle={\color{black}},
+    emph={int,char,double,float,unsigned},
+}
+\begin{lstlisting}[
+    caption={Kernel de inițializare a conținutului registrelor},
+    label={lst:init-kernel-mul}
+]
+void init_kernel(void) {
+  BEGIN_KERNEL("init_kernel");
+    EXECUTE_IN_ALL(
+      R25 = 0;   // locatia din memoria locala de unde se incarca primul vector
+      R26 = 511; // locatia din memoria locala de unde se incarca al 2-lea vector
+      R30 = 1;   // numarul 1; util in calcule
+      R31 = 0;   // numarul 0; util in calcule
+    )
+}
+
+void multiply_kernel(void) {
+  BEGIN_KERNEL("multiply_arr_mat");
+    EXECUTE_IN_ALL(
+      R1 = LS[R25];         // Pasul 1 - partea 1
+      R2 = LS[R26];         // Pasul 1 - partea a 2-a
+      R29 = INDEX;          // Incarcarea indexului unui PE
+      
+      R3 = R1 * R2;         // Pasul 2
+      R3 = MULT_HIGH();
+
+      CELL_SHL(R2, R30);    // Pasul 5
+      NOP;
+      R4 = SHIFT_REG;
+      R4 = R1 * R4;         // Pasul 7
+      R4 = MULT_HIGH();
+
+      CELL_SHR(R2, R30);    // Pasul 6
+      NOP;
+      R5 = SHIFT_REG;
+      R5 = R1 * R5;         // Pasul 8
+      R5 = MULT_HIGH();
+
+      R9 = INDEX;           // Pasul 9 - selectia PE cu index impar
+      R9 = R9 & R30;
+      R7 = (R9 == R30);
+    )
+
+    EXECUTE_WHERE_EQ(       // Instructiunile se executa doar in PE impar
+      R3 = R31 - R3;        // Pasul 3
+
+      R4 = R5;              // Pasul 9 - mutarea R5 -> R4
+    )
+
+    EXECUTE_IN_ALL(
+      REDUCE(R3);           // Pasul 3
+      REDUCE(R4);           // Pasul 10
+    )
+  END_KERNEL("multiply_arr_mat");
+}
+\end{lstlisting}
+
+
+\section{Kernel pentru înmulțirea mai multor vectori cu aceeași matrice}
+\label{sec:kernel-mult-arr-mat}
+\lstset{
+    language=C++,
+    directivestyle={\color{black}},
+    emph={int,char,double,float,unsigned},
+}
+\begin{lstlisting}[
+    caption={Kernel pentru înmulțirea unui vector linie cu o matrice pătratică,},
+    label={lst:vector-matrix-kernel}
+]
+void MUSIC_lin_array_cnx_impl::init_kernel(int size_of_block)
+{
+  BEGIN_KERNEL("initKernel");
+    EXECUTE_IN_ALL(
+      R10 = 0;
+      R11 = 1;
+      R12 = 0;
+      R13 = 900;
+      R14 = size_of_block;      // Equal to ARR_SIZE_C; dimension of the blocks
+                                // on which reduction is performed at once
+      R8 = INDEX;               // Select only the odd PEs
+    )
+  END_KERNEL("initKernel");
+}
+
+void MUSIC_lin_array_cnx_impl::init_index(void)
+{
+  BEGIN_KERNEL("initIndex");
+    EXECUTE_IN_ALL(
+      R2 = LS[R13];             // load input matrix
+      REDUCE(R0);
+    )
+  END_KERNEL("initIndex");
+}
+
+void MUSIC_lin_array_cnx_impl::multiply_kernel(
+  int LS_per_iteration, int size_reduction_block, int blocks_to_reduce)
+{
+  BEGIN_KERNEL("multiplyArrMatKernel");
+    EXECUTE_IN_ALL(
+      R12 = 0;                      // reset array LS index
+    )
+
+    for (int i = 0; i < LS_per_iteration; i++) {
+      EXECUTE_IN_ALL(
+        R1 = LS[R12];               // load input array
+        R0 = INDEX;                 // Used later to select PEs for reduction
+        R6 = size_reduction_block;  // Used to select blocks for reduction
+
+        R3 = R1 * R2;               // a1 * a2, b1 * b2
+        R3 = MULT_HIGH();
+
+        CELL_SHL(R2, R11);          // Bring b2 to the left to calc b2 * a1
+        NOP;
+        R4 = SHIFT_REG;
+        R4 = R1 * R4;               // a1 * b2
+        R4 = MULT_HIGH();
+
+        CELL_SHR(R2, R11);
+        NOP;
+        R5 = SHIFT_REG;
+        R5 = R1 * R5;               // b1 * a2
+        R5 = MULT_HIGH();
+
+        R9 = R8 & R11;
+        R7 = (R9 == R11);
+        NOP;
+      )
+
+      EXECUTE_WHERE_EQ(             // Only in the odd PEs
+        // Getting -b1 * b2 in each odd cell
+        R3 = R10 - R3;              // All partial real parts are in R3
+
+        R4 = R5;                    // All partial imaginary parts are now in R4
+      )
+
+      REPEAT_X_TIMES(blocks_to_reduce);
+        EXECUTE_IN_ALL(
+          R7 = (R0 < R6);           // Select only blocks of PEs at a time
+          NOP;
+        )
+        EXECUTE_WHERE_LT(
+          R0 = 129;                 // A random number > 128 so these PEs won't
+                                    // be selected again
+          REDUCE(R3);               // Real part
+          REDUCE(R4);               // Imaginary part
+        )
+        EXECUTE_IN_ALL(
+          R6 = R6 + R14;            // Go to the next block of PEs
+        )
+      END_REPEAT;
+
+      EXECUTE_IN_ALL(
+        R12 = R12 + R11;            // Go to the next LS
+      )
+    }
+  END_KERNEL("multiplyArrMatKernel");
+}
+\end{lstlisting}
+
+\section{Kernel pentru înmulțirea înlănțuită dintre un vector linie, o matrice
+și un vector coloană}
+\label{sec:kernel-mult-chained}
+
+\lstset{
+    language=C++,
+    directivestyle={\color{black}},
+    emph={int,char,double,float,unsigned},
+}
+\begin{lstlisting}[
+    caption={Kernel pentru înmulțirea înlănțuită dintre un vector linie, o matrice
+și un vector coloană în situația în care cel puțin o matrice poate fi scrisă pe
+o linie din LS},
+    label={lst:kernel-mult-chained}
+]
+void MUSIC_lin_array_cnx_impl::init_chained(int size_red_block, int LS_mat_)
+{
+  BEGIN_KERNEL("initKernelChained");
+    EXECUTE_IN_ALL(
+      R26 = LS_mat_;        // From where to start reading the matrix
+      R30 = 1;
+      R31 = 0;
+      R28 = size_red_block; // dimension of the blocks on which reduction is
+                            // performed at once
+      R9 = INDEX;           // Select only the odd PEs
+    )
+  END_KERNEL("initKernelChained");
+}
+
+ void MUSIC_lin_array_cnx_impl::init_index_chained(void)
+{
+  BEGIN_KERNEL("initIndexChained");
+    EXECUTE_IN_ALL(
+      R2 = LS[R26];           // Load new matrix
+    )
+  END_KERNEL("initIndexChained");
+}
+
+void MUSIC_lin_array_cnx_impl::multiply_chained(int LS_per_execution,
+  int size_red_block, int nr_red_blocks, int LS_in_arr_, int LS_final_real_,
+  int LS_final_imag_)
+{
+  BEGIN_KERNEL("multChained");
+    EXECUTE_IN_ALL(
+      R25 = LS_in_arr_;       // Reset the array index
+      R24 = LS_final_real_;   // Reset the real part of the final array index
+      R23 = LS_final_imag_;   // Reset the imag part of the final array index
+    )
+
+    for (int i = 0; i < LS_per_execution; i++) {
+      EXECUTE_IN_ALL(
+        R1 = LS[R25];         // Load input array
+        R15 = LS[R24];        // Load real part of the final array
+        R16 = LS[R23];        // Load imag part of the final array
+        R29 = INDEX;          // Used later to select PEs for reduction
+        R27 = size_red_block; // Used to select blocks for reduction
+
+        R16 = R31 - R16;      // Invert imag part of the final array
+
+        R3 = R1 * R2;         // a1 * a2, b1 * b2
+        R3 = MULT_HIGH();     // Get partial real parts of the first arr x
+                              // mat product
+        CELL_SHL(R1, R30);    // Bring b1 to the left to calc b1 * a2
+        NOP;
+        R4 = SHIFT_REG;
+        R4 = R4 * R2;         // b1 * a2
+        R4 = MULT_HIGH();
+
+        CELL_SHR(R1, R30);
+        NOP;
+        R5 = SHIFT_REG;
+        R5 = R5 * R2;         // b2 * a1
+        R5 = MULT_HIGH();
+
+        R10 = R9 & R30;
+        R7 = (R10 == R30);
+        NOP;
+      )
+
+      EXECUTE_WHERE_EQ(       // Only in the odd PEs
+        R3 = R31 - R3;        // Invert sign of these partial real parts
+
+        R4 = R5;              // All partial imaginary parts of the first
+                              // product are now in R4
+      )
+
+      EXECUTE_IN_ALL(
+        R3 = R3 * R15;         // Multiply by the real part of the elements
+        R3 = MULT_HIGH();     // in the final array
+
+        R4 = R4 * R16;         // Multiply the partial imag parts of the
+                              // first product by the imag part of the final array
+        R4 = MULT_HIGH();
+      )
+
+      // We reduce blocks of size mat_size_c; Half of the final result is in
+      // R3 and the other half is in R4
+      REPEAT_X_TIMES(nr_red_blocks);
+        EXECUTE_IN_ALL(
+          R7 = (R29 < R27);   // Select only blocks of PEs at a time
+          NOP;
+        )
+        EXECUTE_WHERE_LT(
+          R29 = 129;          // A random number > 128 so these PEs won't be
+                              // selected again
+          REDUCE(R3);         // Real part
+          REDUCE(R4);         // Imaginary part
+        )
+        EXECUTE_IN_ALL(
+          R27 = R27 + R28;    // Go to the next block of PEs
+        )
+      END_REPEAT;
+
+      EXECUTE_IN_ALL(
+        R25 = R25 + R30;      // Go to the next LS
+        R24 = R24 + R30;
+        R23 = R23 + R30;
+      )
+    }
+  END_KERNEL("multChained");
+}
+\end{lstlisting}
+
+
+
+\section{Kernel pentru realizarea autocorelației}
+\label{sec:kernel-autocorr-code}
+
+\lstset{
+    language=C++,
+    directivestyle={\color{black}},
+    emph={int,char,double,float,unsigned},
+}
+\begin{lstlisting}[
+    caption={Kernel pentru calculul autocorelației unui semnal},
+    label={lst:kernel-autocorr-code}
+]
+void autocorrelate_cnx_impl::initKernel(const int &LS_per_row_) {
+  BEGIN_KERNEL("initKernel");
+    EXECUTE_IN_ALL(
+      R0 = LS_per_row_;
+      R29 = 1;
+      R28 = 0;
+      R25 = 2;
+    )
+  END_KERNEL("initKernel");
+}
+
+void autocorrelate_cnx_impl::autocorrelationKernel(
+  const int &iterations_per_array)
+{
+  BEGIN_KERNEL("autocorrelationKernel");
+    for (int i = 0; i < n_rows; i++) {
+      for (int j = i; j < n_rows; j++) {
+        EXECUTE_IN_ALL(
+          R14 = i;
+          R15 = j;
+
+          R30 = R14 * R0;           // go to line i
+          R31 = R15 * R0;           // go to col j
+        )
+
+        REPEAT_X_TIMES(iterations_per_array);
+          EXECUTE_IN_ALL(
+            R1 = LS[R30];
+            R2 = LS[R31];
+            R3 = R1 * R2;
+            R3 = MULT_HIGH();       // re1 * re2, im1 * im2
+
+            CELL_SHL(R2, R29);
+            NOP;
+            R4 = SHIFT_REG;
+            R4 = R4 * R1;
+            R4 = MULT_HIGH();       // re1 * im2
+            R4 = R28 - R4;          // The column is conjugated => negate these
+
+            CELL_SHR(R2, R29);
+            NOP;
+            R5 = SHIFT_REG;
+            R5 = R5 * R1;
+            R5 = MULT_HIGH();       // re2 * im1;
+
+            R6 = INDEX;             // Select only the odd PEs
+            R6 = R6 & R29;
+            R7 = (R6 == R29);
+            NOP;
+          )
+
+          EXECUTE_WHERE_EQ(
+            R4 = R5;                // All partial imaginary parts are now in R4
+          )
+
+          EXECUTE_IN_ALL(
+            REDUCE(R3);
+            REDUCE(R4);
+
+            R30 = R30 + R29;        // Go to next chunk on line & col
+            R31 = R31 + R29;
+          )
+        END_REPEAT;
+      }
+    }
+  END_KERNEL("autocorrelationKernel");
+}
+\end{lstlisting}
+

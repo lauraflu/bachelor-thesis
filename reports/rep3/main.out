@@ -1,0 +1,14 @@
+\BOOKMARK [1][]{section.1}{Introduction}{}% 1
+\BOOKMARK [1][]{section.2}{Accelerating the computation of the MUSIC spectrum}{}% 2
+\BOOKMARK [2][]{subsection.2.1}{Multiplication kernel on the ConnexArray SIMD}{section.2}% 3
+\BOOKMARK [2][]{subsection.2.2}{Integrating the kernel in a standalone GNURadio out-of-tree module}{section.2}% 4
+\BOOKMARK [2][]{subsection.2.3}{Multithreading support for the kernel}{section.2}% 5
+\BOOKMARK [2][]{subsection.2.4}{Integrating the kernel in the MUSIC DoA chain}{section.2}% 6
+\BOOKMARK [3][]{subsubsection.2.4.1}{Adaptations needed for integration}{subsection.2.4}% 7
+\BOOKMARK [3][]{subsubsection.2.4.2}{Results obtained}{subsection.2.4}% 8
+\BOOKMARK [3][]{subsubsection.2.4.3}{Peformance}{subsection.2.4}% 9
+\BOOKMARK [1][]{section.3}{Accelerating the computation of the autocorrelation}{}% 10
+\BOOKMARK [2][]{subsection.3.1}{Autocorrelation kernel on the ConnexArray SIMD}{section.3}% 11
+\BOOKMARK [1][]{section.4}{Conclusion}{}% 12
+\BOOKMARK [1][]{section.5}{Code snippets}{}% 13
+\BOOKMARK [2][]{subsection.5.1}{Accelerating the matrix multiplication - multithreading}{section.5}% 14

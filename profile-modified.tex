@@ -1,0 +1,47 @@
+%=============================================================================
+% Profiling table
+%=============================================================================
+\begin{table}[H]
+\begin{center}
+ \begin{tabular}{||c c c||} 
+ \hline
+ Overhead  & Command & Symbol \\ [0.5ex] 
+ \hline\hline
+ 28,63\% 
+ &
+ autocorrelate9
+ &
+ \makecell{cgemm\_}
+ \\ 
+ 
+ \hline
+ 23,16\%
+ &
+ MUSIC\_lin\_array
+ &
+ \makecell{cgemm\_}
+ \\
+ 
+ \hline
+ 5,40\%  
+ &
+ multiply\_matrix
+ &
+ \makecell{\_\_mulsc3}
+
+ \\
+ 
+ \hline
+ 5,04\%  
+ &
+ autocorrelate9
+ &
+ \makecell{std::conj<float>}
+ \\ [1ex] 
+ \hline
+\end{tabular}
+\end{center}
+\caption{Profilul lanțului de procesare MUSIC realizat pe un procesor Intel
+Core i7 după aplicarea corecțiilor în algoritmul de identificare a maximelor
+spectrului MUSIC}\label{tab:prof-remove} 
+\end{table}

@@ -1,0 +1,62 @@
+%=============================================================================
+% Profiling table
+%=============================================================================
+\begin{table}[H]
+\begin{center}
+ \begin{tabular*}{\textwidth}{||c @{\extracolsep{\fill}} c @{\extracolsep{\fill}} c @{\extracolsep{\fill}}||}
+% {||c c c||} 
+ \hline
+ Overhead  & Command & Symbol \\ [0.5ex] 
+ \hline\hline
+ 43,67\% 
+ &
+ autocorrelate\_cnx\_impl
+ &
+ \makecell{gr::doa::autocorrelate\_cnx \\ \_impl::prepareInData}
+ \\ 
+ 
+ \hline
+ 9,75\%
+ &
+ autocorrelate\_cnx\_impl
+ &
+ \makecell{std::complex<float>::imag[abi:cxx11]}
+ \\
+ 
+ \hline
+ 9,53\%  
+ &
+ autocorrelate\_cnx\_impl
+ &
+ \makecell{std::complex<float>::real[abi:cxx11]}
+ \\
+ 
+ \hline
+ 1,89\%  
+ &
+ autocorrelate\_cnx\_impl
+ &
+ \makecell{\_\_copy\_from\_user}
+ \\
+ 
+ \hline
+ 1,86\%  
+ &
+ autocorrelate\_cnx\_impl
+ &
+ \makecell{\_\_gnu\_cxx::new\_allocator \\ <unsigned short>::~new\_allocator}
+ \\
+ 
+ \hline
+ 1,64\%  
+ &
+ autocorrelate\_cnx\_impl
+ &
+ \makecell{\_raw\_spin\_unlock\_irqrestore}
+ \\ [1ex] 
+ \hline
+\end{tabular*}
+\end{center}
+\caption{Profil pentru blocul de autocorelație care folosește un kernel ConnexArray}
+\label{tab:prof-autocorr-kernel}
+\end{table}

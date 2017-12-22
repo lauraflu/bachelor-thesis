@@ -1,0 +1,51 @@
+\section{Conclusion}
+\label{sec:acc-conclusion}
+
+Further things to do:
+\begin{enumerate}
+  \item Rethink the multithreading part (need some help here)
+
+  \item Explain how and why I eliminated the first hotspot (that I considered
+  redundant). Should I email the guys that made the graph and ask them about it?
+  I seriously doubt they remember anymore.
+
+  \item \sout{Include profiling data after eliminating the hotspot above and} draw some
+  conclusions
+
+  \item \sout{Profile on ARM (and hope the results coincide with the ones
+  above)}
+
+  \item \label{li-test1} \sout{Test the kernel on ARM + Connex} Find what's
+  wrong with the results on Connex.
+
+  \item Integrate the kernel in the graph, test it, profile it and compare
+
+  \item For testing in \ref{li-test1}: \sout{Create some files with random data
+  generated in Octave along with the expected results and maybe} integrate with
+  gtest? 
+
+  \item Autocorrelation
+    \begin{enumerate}
+      \item Make kernel more efficient (think about how to process/prepare data
+      so as to not wait too much). 
+      \item How expensive is the writeDataToArray? Is it okay to load everything
+      in one chunk?
+      \item How to do the index loading more efficiently? If it isn't possible
+      to give the line and column indices as arguments to a function, maybe
+      create a big array with possible indices and just send some parts to the
+      kernel? This instead of the current version, which at each iteration
+      deletes the current items and allocates memory for the new index.
+      \item Do the backward averaging part on the kernel too?
+      \item Integrate into gr-doa
+    \end{enumerate}
+
+  \item Decide what parts from the past reports will be in the final thesis and
+  assemble them. I think I'll have enough pages, so that shouldn't be the
+  problem, but instead choose what's important to include.
+
+  \item Less important but still: ask someone about the style of the code in the
+  thesis. The official template that I have draws ugly boxes around references
+  and I'm not sure it's ok. Also, I don't know about the style of the code
+  included.
+
+\end{enumerate}

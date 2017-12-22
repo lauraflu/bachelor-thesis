@@ -1,0 +1,28 @@
+\chapter{Evaluarea performanțelor kernelurilor pentru acceleratorul ConnexArray}
+
+\section{Măsurarea timpului de execuție al unui program}
+\label{sec:measure-time}
+
+\lstset{
+        language=C++,
+        directivestyle={\color{black}},
+        emph={int,char,double,float,unsigned},
+        emphstyle={\color{gray}},
+        stringstyle=\color{mygray}  
+    }
+\begin{lstlisting}[
+        firstnumber=1,
+        caption={Măsurarea timpului de execuție al unui program},
+        label={lst:measure-time-prog}
+    ]
+auto start = std::chrono::system_clock::now();
+
+tb->start();
+tb->wait();
+
+auto end = std::chrono::system_clock::now();
+auto elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
+std::cout << "Wall time: " << elapsed.count() << std::endl;
+\end{lstlisting}
+
+

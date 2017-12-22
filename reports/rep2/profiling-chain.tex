@@ -1,0 +1,220 @@
+%=============================================================================
+% SECTION 4 - The Profiling Chain
+%=============================================================================
+
+% TODO maybe change title...
+\section{The Profiling Chain}
+\label{sec:profiling-chain}
+% TODO is it important - for the profiling - to change the AoA to see the
+% performance? if not, how do i motivate this?
+\subsection{Profile Methodology}
+
+The GNU Radio Companion generates a Python script based on the flow graph
+created in the graphic interface. The Python script then uses SWIG
+\cite{cite:swig}, a tool that enables it to access the modules written in C++
+and execute the flow graph.  Because of this intermediary step, the profiling
+performed on the script is not very conclusive, since functions needed in the
+wrapping process that are not directly related to the algorithm itself end up
+consuming much of the execution time. For this reason, the preferred solution
+was to create a C++ program that creates a flow graph similar to the initial
+one, which also eliminates the dependency on a visual interface. \\
+
+In this test program all the Qt blocks previously used are eliminated and, where
+necessary, they are replaced with \textbf{Null Sink} blocks, which simply
+discard the data feeding them, so that there are no time consuming I/O
+operations. Additionally, the \textbf{Throttle} block is also discarded because
+we want to profile the program when it runs at full speed. \\
+
+After the program starts the flow graph, it creates a new thread and, after it
+sleeps for 2 seconds (a period of time that can be adjusted), it calls for the
+flow graph to stop its execution, otherwise it would run indefinitely. The full
+code of the C++ flow graph and its Makefile can be found in Section
+\ref{sec:code-snips}, in Listing \ref{lst:cpp-fg} and Listing
+\ref{lst:cpp-fg-makefile}, respectively. \\
+
+% TODO the hardware events vary with the processor - if we also profile it on
+% ARM we should also be sure that we are comparing quite the same things
+For profiling the processing chain, both \textbf{perf} \cite{cite:perf} and
+\textbf{callgrind} \cite{cite:callgrind} have been used. \textbf{perf} is a
+powerful tool for measuring a large set of hardware events, which also displays
+assembly code for functions of interests, which can be helpful when wanting to
+target micro-optimizations.  With \textbf{callgrind}, on the other hand, there
+is the option of using the visual interface \textbf{kcachegrind}
+\cite{cite:kcachegrind} for an easier tracing of the call graph. In this case,
+the percentage of time spent in different functions is of interest, and both of
+the profiling tools gave similar results. \\
+
+Using \textbf{perf}, we can obtain how many cycles are spent in each function by using
+the command:
+\begin{lstlisting}[language=bash]
+perf record -e cycles ./run_MUSIC_profile
+\end{lstlisting}
+
+If we want to view the call graph, we can instead use:
+\begin{lstlisting}[language=bash]
+perf record --call-graph lbr ./run_MUSIC_profile
+\end{lstlisting}
+
+Profiling the code with \textbf{callgrind} can be done with the following
+command:
+\begin{lstlisting}[language=bash]
+valgrind --tool=callgrind ./run_MUSIC_profile
+\end{lstlisting}
+
+Since the results with both of the profilers are similar, only the ones obtained
+with \textbf{perf} will be outlined. Of particular interest is the case when the
+maximum level of optimization is being used, but since the call succession
+cannot be observed very well in this case, another analysis with the lowest
+level of optimization and debug symbols has been performed. The profiling flow
+graph uses functions from the \textit{gr-doa} library of Ettus Research, as well
+as from \textit{Armadillo} \cite{cite:armadillo}, a C++ library for linear
+algebra, which was compiled from sources, as the latest version needed cannot be
+found yet in the official repositories. The processing blocks rely internally
+heavily on functions implemented in \textit{Armadillo} which may end up being
+computing intensive, so when compiling the profiling chain with level 0 of
+optimization, we have to make sure that both of the libraries are compiled in
+the same way in order to see the hot spots of the processing chain.
+
+\subsection{Profile results}
+
+Using the maximum level of optimization, the most important profiling results
+(for the functions which consume more than 2\% of the execution time) are
+presented in Table \ref{tab:prof-o3}. \\
+
+\input{profiling-table-o3}
+
+According to the documentation of the tool, \textit{Overhead} is the percentage
+of time spent in a particular function, \textit{Command} is the name of the task
+that can be read via \code{/proc/<pid>/comm}, and \textit{Symbol} is the name of
+the function executed at the moment of sampling. \\
+
+Table \ref{tab:prof-o0} presents the output produced by \code{perf report} when
+the libraries and the project are compiled with the lowest level of
+optimization. \\
+
+\input{profiling-table-o0}
+
+With further investigation, it is found that the most time consuming function is
+\code{arma::glue\_hist::} \code{apply\_noalias<unsigned int>}, a function from
+the \textit{Armadillo library} which is called from the function
+\code{find\_local\_max}, responsible for finding the peaks in the MUSIC
+spectrum. More precisely, the function is called from the \code{hist} functions
+which is used in Listing \ref{lst:find-local-max}. \\
+
+\begin{minipage}{\linewidth}
+\lstset{
+	language=C++,
+	directivestyle={\color{black}},
+	emph={int,char,double,float,unsigned},
+	emphstyle={\color{RoyalBlue}}
+    }		
+\begin{lstlisting}[
+	firstnumber=105,
+	caption={Computationally Intensive Part in find\_local\_max},
+	label={lst:find-local-max}
+    ]
+// finding all peak locations by computing
+// second-order difference of
+// sign of first-order difference
+uvec indx2 = find(diff(sign_fod_in_vec) == -2)+1;
+
+uvec indx3;
+uvec indx3_unique;
+uvec hist_indx3;
+uvec all_pk_indxs;
+if (!indx2.is_empty())
+{
+    // finding set-intersection between indx1 and indx2
+    // in order to identify local peaks
+    indx3 = join_vert(indx1, indx2);
+    indx3_unique = unique(indx3);
+    hist_indx3 = hist(indx3, indx3_unique);
+
+    all_pk_indxs = indx1(find(hist_indx3 == 2));
+}
+\end{lstlisting}
+\end{minipage}
+
+TODO: explain what that part isn't necessary in most of the cases and which are
+those \\
+
+By eliminating that processing overhead where it is not necessary, we obtain the
+new profiling results in Table \ref{tab:prof-remove}, where only the functions
+that make up more than 5\% of the execution time are presented. 
+
+\input{profiling-table-modified}
+
+Out of them, the ones related to the noise source are not of interest, since
+they are relevant only for the simulation process, and we will therefore focus
+only on the first two results. \\
+
+Using the profiling tools, we find out that the hotspot in the \textbf{MUSIC
+Linear Array} block is the computation of the MUSIC spectrum using
+\eqref{eq:music-spectrum}, which can be found in Listing \ref{lst:hot-music}, on
+line 136. \\
+
+\begin{minipage}{\linewidth}
+\lstset{
+	language=C++,
+	directivestyle={\color{black}},
+	emph={int,char,double,float,unsigned},
+	emphstyle={\color{RoyalBlue}}
+    }		
+\begin{lstlisting}[
+	firstnumber=134,
+	caption={Computationally Intensive Part in the MUSIC Linear Array block},
+	label={lst:hot-music}
+    ]
+for (int ii = 0; ii < d_pspectrum_len; ii++)
+{
+  Q_temp = as_scalar(d_vii_matrix_trans.row(ii) * U_N_sq * d_vii_matrix.col(ii));
+  out_vec(ii) = 1.0 / Q_temp.real();
+}
+\end{lstlisting}
+\end{minipage}
+
+As far as the autocorrelation is concerned, the computationally intensive part
+is done in the first part of the calculation of the autocorrelation,
+corresponding to formula \eqref{eq:autocorr-first-part}. 
+Listing \ref{lst:hot-autocorrelation} depicts the part of the code
+that performs this specific function. The \code{d\_input\_matrix} is already
+stored in a transposed form, which explains the differences between the formula
+and the code. \\
+
+\begin{minipage}{\linewidth}
+\lstset{
+	language=C++,
+	directivestyle={\color{black}},
+	emph={int,char,double,float,unsigned},
+	emphstyle={\color{RoyalBlue}}
+    }		
+\begin{lstlisting}[
+	firstnumber=105,
+	caption={Computationally Intensive Part in autocorrelate},
+	label={lst:hot-autocorrelation}
+    ]
+out_matrix =
+    (1.0 / d_snapshot_size) * d_input_matrix.st() * conj(d_input_matrix);
+\end{lstlisting}
+\end{minipage}
+
+\subsubsection{Profile results on the Xilinx ZedBoard Zynq-7000 ARM/FPGA SoC
+Development Board}
+
+% TODO: how many details about the techincal specifications?
+The ConnexArray SIMD processor that will be used for offloading certain parts of
+the MUSIC algorithm is implemented on the FPGA on a Zedboard Zynq-7000
+development board \cite{cite:zedboard}. Therefore, we are also interested in
+profiling the application on the processor on the board, which is a Dual-Core
+ARM Cortex A9 processor. The time ratio spent in the main functions is similar
+to the previous results, the only difference lying in the number of samples
+processed in the same amount of time (in this case, 30 seconds) during which the
+chain is running - 5664 compared with 69879 on the Intel processor. \\
+
+Table \ref{tab:prof-zedboard} presents the profiling results on the Dual-Core
+ARM Cortex A9 processor, leaving only the results that end up consuming more
+than 5\% of the processing time.
+
+\input{profile-table-zedboard}
+
+

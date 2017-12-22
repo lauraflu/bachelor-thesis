@@ -1,0 +1,66 @@
+\chapter{Introducere}
+\label{chapter:intro}
+
+Sistemele radio definite software (SDR - Software Defined Radio), în care
+funcții din nivelul fizic al echipamentelor sunt implementate software, a prins
+amploare odată cu creșterea capabilității procesoarelor de uz general, astfel
+încât, în mod curent, toate echipamentele radio au implementat într-o oarecare
+măsură acest concept. Migrarea către software nu este deloc surprinzătoare:
+echipamentele devin mai ușor (re)configurabile, actualizările se efectuează rapid, avantaj
+deosebit de important în contextul evoluției rapide a tehnologiei, iar costurile
+scad, deoarece nu se mai impune înlocuirea unor componente \textit{hardware} care nu mai
+corespund cerințelor pieței. \\
+
+Deși procesoarele de uz general s-au adaptat cerințelor de procesare impuse de
+procesarea digitală a semnalelor prin implementarea unor extensii multimedia
+pentru instrucțiuni SIMD, acestea sunt limitate din punct de vedere al
+capacității oferite, iar compilatoarele adesea nu pot efectua o vectorizare
+eficientă a codului și în unele cazuri nu oferă deloc suport pentru instrucțiuni
+SIMD. Dorim să găsim o alternativă pentru procesarea digitală a semnalelor mai
+eficientă folosind suportul unui procesor, fără a sacrifica
+programabilitatea atât de importantă în SDR. \\
+
+Propunem folosirea unui ansamblu procesor-accelerator cu suport pentru
+programarea acceleratorului în interiorul codului executat pe procesor, care va
+efectua funcții de control, lăsând în sarcina acceleratorului părțile intensive
+din punct de vedere computațional care ar putea beneficia de suport SIMD.
+Ansamblul reprezintă o cale de mijloc între resursele de procesare insuficiente
+oferite de către extensiile multimedia și programarea dificilă a sistemelor care
+decuplează total procesorul gazdă de un accelerator adaptat perfect cerințelor
+aplicației pentru care este folosit. Sistemul utilizat este denumit
+Connex-ARM~\cite{energy-effective-simd} și este implementat pe platforma Xilinx
+Zynq-7000~\cite{zynq}, în al cărei chip FPGA se află acceleratorul cu
+arhitectura ConnexArray. \\
+
+Vom analiza performanțele sistemului obținute în localizarea sursei unui semnal
+radio, în care anumite puncte critice din lanțul de procesare vor fi
+implementate pe accelerator. Algoritmul folosit pentru localizarea sursei unui
+semnal este MUSIC~\cite{music-schmidt} (MUltiple SIgnal Classification), iar implementarea folosită
+ca referință~\cite{ettus-doa} este integrată în mediul GNU
+Radio~\cite{gnuradio}, dedicat aplicațiilor SDR. Ansamblul folosit prezintă, în
+plus, o alternativă eficientă din punct de vedere energetic~\cite{fpga-visual},
+aspect deosebit de important în echipamentele de telecomunicații.
+
+Proiectul cuprinde, astfel, următoarele etape:
+\begin{itemize}
+  \item Studiul algoritmului folosit și al tehnologiilor folosite în proiect, a
+  căror funcționare va fi sintetizată în Capitolul~\ref{chapter:background}.
+
+  \item Identificarea punctelor critice din lanțul de procesare care
+  implementează algoritmul MUSIC, care va fi făcută în
+  Capitolul~\ref{chapter:impl}, alături de o descriere a funcționării lanțului
+  de procesare și a metodologiei utilizate în realizarea profilului său de execuție.
+
+  \item Implementarea unor \textit{kerneluri} pentru acceleratorul ConnexArray
+  corespunzătoare punctelor critice identificate, detaliate în
+  Capitolul~\ref{chapter:acc}. În acest capitol se vor descrie și pașii
+  efectuați în integrarea kernelurilor în mediul GNU Radio, integrate în blocuri de sine
+  stătătoare corespunzătoare unei funcționalități din lanțul {MUSIC}.
+
+  \item Evaluarea performanțelor blocurilor nou create în comparație cu cele
+  inițiale atât separat, cât și în întregul lanț de procesarei va fi descrisă în
+  Capitolul~\ref{chapter:eval}.
+\end{itemize}
+
+În finalul lucrării, în Capitolul \ref{chapter:concl}, vom prezenta concluziile
+proiectului, precum și diverse îmbunătățiri care îi vor fi aduse pe viitor.

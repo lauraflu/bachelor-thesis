@@ -1,0 +1,56 @@
+%=============================================================================
+% Profiling table
+%=============================================================================
+\begin{table}[H]
+\begin{center}
+ \begin{tabular*}{\textwidth}{||c @{\extracolsep{\fill}} c @{\extracolsep{\fill}} c @{\extracolsep{\fill}}||}
+% {||c c c||} 
+ \hline
+ Overhead  & Command & Symbol \\ [0.5ex] 
+ \hline\hline
+ 9,45\% 
+ &
+ MUSIC\_lin\_array
+ &
+ \makecell{gr::doa::MUSIC\_lin\_array\_cnx\_impl:: \\
+ prepareOutDataConnex}
+ \\ 
+ 
+ \hline
+ 7,58\%
+ &
+ MUSIC\_lin\_array
+ &
+ \makecell{arma::Mat<std::complex<float>>::init\_warm}
+ \\
+ 
+ \hline
+ 7,13\%  
+ &
+ MUSIC\_lin\_array
+ &
+ \makecell{cgemv_}
+ \\
+ 
+ \hline
+ 5,75\%  
+ &
+ MUSIC\_lin\_array
+ &
+ \makecell{arma::subview<std::complex<float>>::extract}
+ \\
+ 
+ \hline
+ 5,05\%  
+ &
+ MUSIC\_lin\_array
+ &
+ \makecell{\_\_copy\_from\_user}
+  
+ \\ [1ex] 
+ \hline
+\end{tabular*}
+\end{center}
+\caption{Profil pentru blocul de autocorelație folosind surse
+fișier}\label{tab:prof-autocorr}
+\end{table}

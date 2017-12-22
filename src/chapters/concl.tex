@@ -1,0 +1,31 @@
+\chapter{Concluzii}
+\label{chapter:concl}
+
+Rezultatele obținute în privința performanțelor blocurilor ce utilizează
+kerneluri ConnexArray demonstrează faptul că acestea pot fi folosite în
+accelerarea algoritmului de localizare MUSIC pentru un plus de performanță cu un
+consum de putere redus. Integrarea acestora în blocuri din mediul
+GNU Radio pentru radio definit software le facilitează utilizarea în aplicații
+deja existente și le extinde domeniul de aplicabilitate, în contextul unei
+dezvoltări accentuate a acestui tip de aplicații. \\
+
+În plus față de implementarea propriu-zisă a blocurilor accelerate folosind
+ansamblul Connex-ARM, am creat și o metodă generică de testare cu mediul
+Google Test, care curpinde peste 100 de teste de evaluare a rezoluției și
+preciziei obținute în diverse configurații ale sistemului, care poate fi
+utilizată inclusiv cu simulatorul OPINCAA și sistemul hardware. \\
+
+Evaluarea performanțelor atinse de implementarea algoritmului MUSIC, atât în
+varianta originală, cât și în cea accelerată, deschide mai multe posibilități de
+îmbunătățire a acestora. Acest aspect devine important dacă luăm în considerare
+faptul că, deși algoritmul MUSIC este preferat din motive de precizie,
+stabilitate și rezoluție, el oferă aceste avantaje cu costul creșterii
+resurselor computaționale necesare în implementarea sa și este de dorit să se
+găsească metode prin care acestea pot fi reduse. \\
+
+Una dintre aceste posibilități este legată de cerința folosirii acceleratorului
+ConnexArray de mai multe blocuri de procesare, care se poate dovedi extrem de
+utilă în aplicații radio definite software în care procesarea este distribuită
+în mai multe blocuri cu sarcini bine definite și vom considera această temă o
+posibilă direcție de cercetare în viitor.
+

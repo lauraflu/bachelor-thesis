@@ -1,0 +1,17 @@
+\BOOKMARK [1][]{section.1}{Introduction}{}% 1
+\BOOKMARK [1][]{section.2}{Teoria din spatele algoritmului MUSIC}{}% 2
+\BOOKMARK [1][]{section.3}{Outline of the MUSIC Algorithm}{}% 3
+\BOOKMARK [1][]{section.4}{The Demo Chain}{}% 4
+\BOOKMARK [2][]{subsection.4.1}{The input data}{section.4}% 5
+\BOOKMARK [2][]{subsection.4.2}{The Multiply by Matrix block}{section.4}% 6
+\BOOKMARK [2][]{subsection.4.3}{The Autocorrelate block}{section.4}% 7
+\BOOKMARK [2][]{subsection.4.4}{The MUSIC Linear Array block}{section.4}% 8
+\BOOKMARK [2][]{subsection.4.5}{The Find Local Max block}{section.4}% 9
+\BOOKMARK [2][]{subsection.4.6}{Visualising the results}{section.4}% 10
+\BOOKMARK [1][]{section.5}{The Profiling Chain}{}% 11
+\BOOKMARK [2][]{subsection.5.1}{Profile Methodology}{section.5}% 12
+\BOOKMARK [2][]{subsection.5.2}{Profile results}{section.5}% 13
+\BOOKMARK [3][]{subsubsection.5.2.1}{Profile results on the Xilinx ZedBoard Zynq-7000 ARM/FPGA SoC Development Board}{subsection.5.2}% 14
+\BOOKMARK [1][]{section.6}{Code snippets}{}% 15
+\BOOKMARK [2][]{subsection.6.1}{The C++ Flow Graph Used for Profiling}{section.6}% 16
+\BOOKMARK [2][]{subsection.6.2}{Makefile for the C++ Tester}{section.6}% 17

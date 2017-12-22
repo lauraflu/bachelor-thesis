@@ -1,0 +1,77 @@
+%=============================================================================
+% Profiling table
+%=============================================================================
+\begin{table}[!htb]
+\begin{center}
+ \begin{tabular}{||c c c||} 
+ \hline
+ Overhead  & Command & Symbol \\ [0.5ex] 
+ \hline\hline
+ 49,14\% 
+ &
+ find\_local\_max6
+ &
+ \makecell{arma::glue\_hist::apply\_noalias<unsigned int>}
+ \\ 
+ 
+ \hline
+ 13,73\%
+ &
+ autocorrelate4
+ &
+ \makecell{cgemm\_}
+ \\
+ 
+  \hline
+ 10,51\%
+ &
+ MUSIC\_lin\_array
+ &
+ \makecell{cgemm\_}
+ \\
+ 
+ \hline
+ 3,63\%
+ &
+ multiply\_matrix
+ &
+ \makecell{\_\_mulsc3}
+ \\
+
+  \hline
+ 3,56\%
+ &
+ MUSIC\_lin\_array
+ &
+ \makecell{cgemv\_}
+ \\
+
+  \hline
+ 3,06\%
+ &
+ MUSIC\_lin\_array
+ &
+ \makecell{gr::doa::MUSIC\_lin\_array\_impl::work}
+ \\
+
+  \hline
+ 2,33\%
+ &
+ MUSIC\_lin\_array
+ &
+ \makecell{\_\_logf\_finite}
+ \\
+
+  \hline
+ 2,08\%
+ &
+ multiply\_matrix  
+ &
+ \makecell{gr::blocks::multiply\_matrix\_cc\_impl::work}
+ \\ [1ex] 
+ \hline
+\end{tabular}
+\end{center}
+\caption{Profilul lanțului de procesare MUSIC realizat pe un procesor Intel Core
+i7}\label{tab:prof-o3}
+\end{table}

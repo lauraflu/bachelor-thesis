@@ -1,0 +1,19 @@
+%============================================================================
+% CONCLUSION
+%============================================================================
+\section{Conclusion}
+\label{sec:conclusion}
+
+The report presented the way in which a custom out-of-tree GNU Radio module can
+be created in order to be used with a ConnexArray machine and, subsequently,
+with the OPINCAA framework. The present code can be used as a base to create
+complex kernels that implement signal processing blocks on the SIMD
+accelerator.\\
+
+As future improvements, I plan on solving the issue with the QA Python
+environment provided by GNU Radio, as it is desirable to have a unit testing
+framework rather than building the tests separately and Python is a better
+programming language choice for this task than C++. Another thing to do would be
+to add the OPINCAA project as a git submodule of the current one, at least until
+a better option is available, since the OOT module depends on it for the
+simulator.\\

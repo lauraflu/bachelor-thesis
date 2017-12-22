@@ -1,0 +1,20 @@
+%============================================================================
+% SECTION1
+%============================================================================
+
+\section{section1}
+	This report describes...
+ 
+%============================================================================
+% Useful stuff:
+% 
+% Reference section: \S\ref{sec:section1} and in the section: \label{section1}
+% Cite stuff: \cite{cite-name}
+% Short bash command:
+%	\begin{lstlisting}[language=bash]
+%	gr_modtool newmod opincaa
+%	\end{lstlisting}
+% Code: \code{...}
+% List: \begin{itemize} \item \end{itemize}
+% Add subsection: \subsection*{Subsection1} --> * removes number of subsection
+%============================================================================

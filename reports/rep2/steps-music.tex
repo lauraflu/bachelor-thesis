@@ -1,0 +1,48 @@
+%=============================================================================
+% SECTION 2 - Steps in MUSIC Algorithm
+%=============================================================================
+
+\section{Outline of the MUSIC Algorithm}
+\label{sec:steps-music-algo}
+The theory behind the MUSIC algorithm discussed in section
+\S\ref{sec:theory-music} can be summarized in some elementary steps. We remind
+that M is the number of elements in the antenna array and D is the number of
+incoming signals at each element.
+
+\subsection*{Step 1}
+\label{ssec:step1}
+Knowing the signal $x_i$ arriving at the element number \textit{i} of the
+antenna array, the input covariance matrix can be computed:
+\begin{equation}
+    \bm{R}_{xx} = E[\bm{xx}^H]
+\end{equation}
+\begin{equation}
+    x = \begin{bmatrix}x_1 & x_2 & ... & x_M \end{bmatrix} \\
+\end{equation}
+
+\subsection*{Step 2}
+\label{ssec:step2}
+Estimate the number of signals arriving at each element of the array. In order
+to do this, we need to compute the eigenvalues of $R_{xx}$ and, from the
+multiplicity $K$ of the smallest eigenvalue, we estimate the number of signals
+as follows:
+\begin{equation}
+    \hat{D} = M - K
+\end{equation}
+
+\subsection*{Step 3}
+\label{ssec:step3}
+Compute the MUSIC spatial spectrum using
+\begin{equation}
+    P_{MUSIC}(\theta) =
+        \frac{\bm{a}^H(\theta)\bm{a}(\theta)}
+             {\bm{a}^H(\theta)\bm{V}_N\bm{V}_N^H\bm{a}(\theta)} \\
+\end{equation}
+\begin{equation}
+    \bm{V}_N = \begin{bmatrix}v_{D+1}, & ..., & v_M \end{bmatrix}
+\end{equation}
+
+\subsection*{Step 4}
+\label{ssec:step4}
+Find the peaks of the estimated MUSIC spectrum which give us direction of
+arrival for the $\hat{D}$ signals.

@@ -1,0 +1,105 @@
+%============================================================================
+% CREATE OOT MODULE
+%============================================================================
+
+\section{Steps taken to create a new out-of-tree module}
+\label{sec:steps-oot}
+\begin{itemize}
+	\item Used the \textbf{gr\_modtool} script to create a new module named
+		\textbf{gr-opincaa}. This creates the directory structure and some of the
+		files specified above, using the following command:\\
+	
+		\begin{lstlisting}[language=bash]
+gr_modtool newmod opincaa
+		\end{lstlisting}
+	
+	\item Created a block that adds two integers on the Connex SIMD, named
+		\textbf{add\_ii}. For this step, we also use \textbf{gr\_modtool},
+		specifying it to create a new module which has a 1:1 relationship between
+		the input rate and the output rate, specified by the parameter \code{sync}:
+	
+		\begin{lstlisting}[language=bash]
+gr_modtool add -t sync add_ii
+		\end{lstlisting}
+	
+		Additionally, I added Python QA support to be able to create tests for the block.
+		Also, I foresaw a step needed for creating a ConnexMachine and when asked to
+		"Enter valid argument list, including default arguments:",
+		I specified the following parameters:\\
+		\code{std::string distributionFIFO},
+		\code{std::string reductionFIFO}, \\
+		\code{std::string writeFIFO} and
+		\code{std::string readFIFO}.
+
+		This is because the ConnexMachine object needs to receive as parameters the
+		FIFO queues that help it to communicate with the SIMD processor or the
+		simulator. Since we pass the paths as parameters, we do not need to take
+		care of both of the cases in the worker and, should the paths ever change,
+		we need only to call the tester with the right arguments.
+
+	\item The \textbf{add\_ii.cc} file needs to be modified to fit with its
+		purpose. Since we want to implement an adder, we need two input ports and
+		one output port, so the constructor of the block needs to have the following
+		structure:\\
+	
+		\lstset{
+			language=C++,
+			directivestyle={\color{black}},
+			emph={int,char,double,float,unsigned},
+			emphstyle={\color{RoyalBlue}}
+		}
+		\begin{minipage}{\linewidth}
+		\begin{lstlisting}
+add_ii_impl::add_ii_impl(
+		std::string distributionFIFO,                                           
+		std::string reductionFIFO,                                              
+		std::string writeFIFO,                                                  
+		std::string readFIFO          
+		)                                                
+	: gr::sync_block
+	("add_ii",                                               
+	  gr::io_signature::make(2, 2, sizeof(int)),                           
+	  gr::io_signature::make(1, 1, sizeof(int)))                           
+{} 
+		\end{lstlisting}
+	\end{minipage}
+
+		The \code{io\_signature} method takes information about the minimum
+		number of ports, the maximum number of ports and their size,
+		respectively. Also, we notice that \textbf{gr\_modtool} added the specified 
+		parameters as arguments to the constructor.
+
+
+	\item Fot the beginning, in the program I simply added two numbers using C++
+		and wrote a test for it, to make sure that it is working accordingly. The
+		processing is done in the worker, where \code{input\_items[i]} and
+		\code{output\_items[i]} are arrays which contains the data of the
+		\code{i}-th input and output, respectively.
+
+		When using the \code{work} method, the length of the input arrays is
+		equal with the one of the output, so we iterate over
+		\code{noutput\_items} to compute the sum. The full code of the worker 
+		function can be found in the subsection \S\ref{ssec:simple-worker}.
+	
+	
+	\item Since we want to ensure that the program is running correctly, we must 
+		write a test for it. The code can be found in the subsection \S\ref{ssec:python-test}
+	
+		We define two input arrays and another one that contains the output we would 
+		expect. Then, we source the elements of both of the inputs, state that 
+		\code{opincaa.add\_ii} is the block that we are testing and gather its output 
+		with \code{blocks.vector\_sink\_i}. Afterwards we build the graph, run it 
+		and compare the results.
+
+		\begin{lstlisting}
+Test project /home/laoo/work/licenta/gr-opincaa/build
+    Start 3: qa_add_ii
+1/1 Test \#3: qa_add_ii ............. Passed    0.16 sec
+
+100% tests passed, 0 tests failed out of 1
+
+Total Test time (real) =   0.16 sec
+		\end{lstlisting}
+
+		Since the test passes, we can proceed to add the OPINCAA kernel.
+\end{itemize}

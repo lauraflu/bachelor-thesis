@@ -1,0 +1,97 @@
+%=============================================================================
+% Profiling table
+%=============================================================================
+\begin{table}[H]
+\begin{center}
+ \begin{tabular}{||c c c||} 
+ \hline
+ Overhead  & Command & Symbol \\ [0.5ex] 
+ \hline\hline
+ 49,87\% 
+ &
+ find\_local\_max6
+ &
+ \makecell{arma::glue\_hist::apply\_noalias<unsigned int>}
+ \\ 
+ 
+ \hline
+ 6,36\%
+ &
+ autocorrelate4
+ &
+ \makecell{cgemm\_}
+ \\
+ 
+ \hline
+ 4,81\%  
+ &
+ autocorrelate4
+ &
+ \makecell{std::conj<float>}
+ \\
+ 
+ \hline
+ 4,66\%
+ &
+ MUSIC\_lin\_array
+ &
+ \makecell{std::complex<float>::complex}
+ \\
+ 
+ \hline
+ 3,38\%
+ &
+ MUSIC\_lin\_array
+ &
+ \makecell{cgemm\_}
+ \\
+
+ \hline
+ 2,46\%
+ &
+ autocorrelate
+ &
+ \makecell{arma::eop\_core<arma::eop\_conj>::apply \\
+ <arma::Mat<std::complex<float> >, \\
+ arma::Mat<std::complex<float> > >}
+ \\
+
+ \hline
+ 1,82\%
+ &
+ MUSIC\_lin\_array
+ &
+ \makecell{arma::Mat<std::complex<float> >:: \\
+ init\_warm}
+ \\
+
+ \hline
+ 1,57\%
+ &
+ autocorrelate4
+ &
+ \makecell{arma::op\_strans::apply\_mat\_noalias \\
+ <std::complex<float>,\\
+ arma::Mat<std::complex<float> > >}
+ \\
+
+ \hline
+ 1,54\%
+ &
+ multiply\_matrix  
+ &
+ \_\_mulsc3
+ \\
+
+ \hline
+ 1,49\%
+ &
+ MUSIC\_lin\_array
+ &
+ cgemv\_
+ \\ [1ex] 
+ \hline
+\end{tabular}
+\end{center}
+\caption{Profiling Results With -O0}\label{tab:prof-o0}
+\end{table}
